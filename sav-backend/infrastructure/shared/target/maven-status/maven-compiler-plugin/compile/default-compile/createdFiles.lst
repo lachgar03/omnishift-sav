@@ -1,0 +1,12 @@
+com\sav\common\enums\Priority.class
+com\sav\common\enums\Team.class
+com\sav\common\enums\TicketType.class
+com\sav\common\events\ticket\TicketAssignedEvent.class
+com\sav\common\events\BaseDomainEvent.class
+com\sav\common\events\user\UserRoleChangedEvent.class
+com\sav\common\enums\TicketStatus.class
+com\sav\common\enums\UserRole.class
+com\sav\common\events\user\UserCreatedEvent.class
+com\sav\common\events\ticket\TicketCreatedEvent.class
+com\sav\common\enums\UserStatus.class
+com\sav\common\events\ticket\TicketStatusChangedEvent.class

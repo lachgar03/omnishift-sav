@@ -1,0 +1,71 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: sav-gateway
+
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "http://127.0.0.1:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+              - HEAD
+            allowedHeaders:
+              - "*"
+            exposedHeaders:
+              - Authorization
+              - Content-Type
+              - Accept
+              - Location
+            allowCredentials: true
+            maxAge: 3600
+
+      routes:
+        # Backend API routes - gateway forwards /api/** to backend
+        - id: sav-backend-api
+          uri: http://localhost:8090
+          predicates:
+            - Path=/api/**
+
+        # Backend actuator routes
+        - id: sav-backend-actuator
+          uri: http://localhost:8090
+          predicates:
+            - Path=/actuator/**
+
+        # Fallback route - everything else goes to backend with /api prefix
+        - id: backend-fallback
+          uri: http://localhost:8090
+          predicates:
+            - Path=/**
+          filters:
+            - PrefixPath=/api
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.web.cors: DEBUG
+    root: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway,routes
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true

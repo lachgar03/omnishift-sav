@@ -1,0 +1,5 @@
+com\sav\user\domain\service\UserService$UserStats.class
+com\sav\user\domain\service\UserService.class
+com\sav\user\domain\entity\User.class
+com\sav\user\domain\repository\UserRepositoryPort.class
+com\sav\user\domain\entity\User$UserBuilder.class

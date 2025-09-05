@@ -1,0 +1,12 @@
+-- Create separate schemas for better organization
+CREATE SCHEMA IF NOT EXISTS keycloak;
+CREATE SCHEMA IF NOT EXISTS sav_app;
+
+-- Grant permissions to the user
+GRANT ALL PRIVILEGES ON SCHEMA keycloak TO savuser;
+GRANT ALL PRIVILEGES ON SCHEMA sav_app TO savuser;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA keycloak TO savuser;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA sav_app TO savuser;
+
+-- Set default schema for application
+ALTER USER savuser SET search_path TO sav_app, public;

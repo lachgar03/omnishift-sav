@@ -1,0 +1,10 @@
+com\sav\user\api\dto\UserStatsResponse.class
+com\sav\user\api\mapper\UserMapper.class
+com\sav\user\api\dto\UpdateUserRoleRequest.class
+com\sav\user\api\dto\CreateUserRequest.class
+com\sav\user\api\dto\UpdateUserStatusRequest.class
+com\sav\user\api\dto\UserResponse.class
+com\sav\user\api\dto\UserResponse$UserResponseBuilder.class
+com\sav\user\api\controller\UserController.class
+com\sav\user\api\dto\UpdateUserProfileRequest.class
+com\sav\user\api\dto\UserStatsResponse$UserStatsResponseBuilder.class

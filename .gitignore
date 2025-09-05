@@ -1,0 +1,17 @@
+# Frontend
+sav-frontend/node_modules/
+sav-frontend/.env
+
+# Backend
+sav-backend/target/
+sav-backend/.env
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+**/logs/
+**/*.log

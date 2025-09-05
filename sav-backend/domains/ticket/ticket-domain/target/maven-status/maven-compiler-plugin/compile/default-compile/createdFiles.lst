@@ -1,0 +1,13 @@
+com\sav\ticket\domain\entity\TicketAttachment.class
+com\sav\ticket\domain\service\TicketMessageService.class
+com\sav\ticket\domain\service\TicketAttachmentService.class
+com\sav\ticket\domain\repository\TicketMessageRepositoryPort.class
+com\sav\ticket\domain\entity\TicketMessage$TicketMessageBuilder.class
+com\sav\ticket\domain\repository\TicketRepositoryPort.class
+com\sav\ticket\domain\entity\TicketMessage.class
+com\sav\ticket\domain\service\TicketService.class
+com\sav\ticket\domain\repository\TicketAttachmentRepositoryPort.class
+com\sav\ticket\domain\entity\Ticket.class
+com\sav\ticket\domain\entity\TicketAttachment$TicketAttachmentBuilder.class
+com\sav\ticket\domain\service\TicketService$TicketStats.class
+com\sav\ticket\domain\entity\Ticket$TicketBuilder.class
