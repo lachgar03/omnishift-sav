@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ticketsApi } from '@/api'
-import type { CreateTicketRequest } from '@/types'
+import type { CreateTicketRequest, TicketResponse } from '@/types'
 import { TicketType, Priority } from '@/constants/roles'
 import { useNavigate } from '@tanstack/react-router'
+import { getErrorMessage, getValidationErrors } from '@/utils/errorUtils'
 
 interface TicketFormProps {
   onSuccess?: () => void
@@ -22,12 +23,14 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
   })
 
   const [errors, setErrors] = useState<Partial<CreateTicketRequest>>({})
+  const [apiError, setApiError] = useState<string>('')
 
   const createTicketMutation = useMutation({
     mutationFn: ticketsApi.create,
-    onSuccess: (data) => {
+    onSuccess: (data: TicketResponse) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       queryClient.invalidateQueries({ queryKey: ['my-tickets'] })
+      setApiError('') // Clear any previous errors
 
       if (onSuccess) {
         onSuccess()
@@ -36,9 +39,17 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
         navigate({ to: `/tickets/${data.id}` })
       }
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       console.error('Failed to create ticket:', error)
-      // Handle error display
+
+      // Handle validation errors
+      const validationErrors = getValidationErrors(error)
+      if (validationErrors) {
+        setErrors(validationErrors as Partial<CreateTicketRequest>)
+      }
+
+      // Set general error message
+      setApiError(getErrorMessage(error))
     },
   })
 
@@ -105,6 +116,22 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
   return (
     <div className="ticket-form">
       <h2>Create New Support Ticket</h2>
+
+      {apiError && (
+        <div
+          className="error-banner"
+          style={{
+            backgroundColor: '#fee',
+            color: '#c00',
+            padding: '10px',
+            marginBottom: '20px',
+            borderRadius: '4px',
+            border: '1px solid #fcc',
+          }}
+        >
+          {apiError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="form">
         <div className="form-group">

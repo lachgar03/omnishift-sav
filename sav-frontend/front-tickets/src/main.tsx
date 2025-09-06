@@ -2,7 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from '@tanstack/react-router'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { MantineProvider } from '@mantine/core'
+import { MantineProvider, createTheme } from '@mantine/core'
+import '@mantine/core/styles.css'
 import { initAuth, queryClient } from './api'
 import { router } from './routes'
 
@@ -19,11 +20,17 @@ if (import.meta.env.DEV) {
   })
 }
 
+// Create Mantine theme
+const theme = createTheme({
+  primaryColor: 'blue',
+  defaultRadius: 'md',
+})
+
 async function start() {
   await initAuth()
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <MantineProvider>
+      <MantineProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
           <RouterProvider router={router} />
         </QueryClientProvider>

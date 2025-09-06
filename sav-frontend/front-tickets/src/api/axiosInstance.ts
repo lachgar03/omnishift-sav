@@ -1,6 +1,7 @@
 import axios from 'axios'
 import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { getToken, refreshToken, logout } from './authConfig'
+import type { ErrorResponse } from '@/types'
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api'
 
@@ -53,20 +54,31 @@ axiosInstance.interceptors.response.use(
       await logout()
     }
 
-    // Log different error types for debugging
-    if (status === 400) {
-      console.warn('Bad Request:', error.response?.data)
-    } else if (status === 403) {
-      console.warn('Forbidden - Insufficient permissions:', error.response?.data)
-    } else if (status === 404) {
-      console.warn('Resource not found:', error.response?.data)
-    } else if (status === 422) {
-      console.warn('Validation errors:', error.response?.data)
-    } else if (status === 500) {
-      console.error('Server error:', error.response?.data)
+    // Parse error response and provide structured error handling
+    const errorResponse = error.response?.data as ErrorResponse | undefined
+
+    // Create enhanced error with structured information
+    const enhancedError = {
+      ...error,
+      parsedError: errorResponse,
+      status,
+      message: errorResponse?.message || error.message,
     }
 
-    return Promise.reject(error)
+    // Log different error types for debugging with structured data
+    if (status === 400) {
+      console.warn('Bad Request:', errorResponse || error.response?.data)
+    } else if (status === 403) {
+      console.warn('Forbidden - Insufficient permissions:', errorResponse || error.response?.data)
+    } else if (status === 404) {
+      console.warn('Resource not found:', errorResponse || error.response?.data)
+    } else if (status === 422) {
+      console.warn('Validation errors:', errorResponse || error.response?.data)
+    } else if (status === 500) {
+      console.error('Server error:', errorResponse || error.response?.data)
+    }
+
+    return Promise.reject(enhancedError)
   },
 )
 

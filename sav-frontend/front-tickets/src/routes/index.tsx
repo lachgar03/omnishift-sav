@@ -11,6 +11,17 @@ import MyTicketsList from '@routes/MyTicketsList'
 import TicketDetail from '@routes/TicketDetail'
 import { UserRole } from '@/constants/roles'
 import NotFound from '@components/NotFound'
+import AdminDashboard from '@/components/admin/AdminDashboard'
+import AdminUserManagement from '@/components/admin/AdminUserManagement'
+import SystemStatistics from '@/components/admin/SystemStatistics'
+import UserList from '@/components/users/UserList'
+import UserDetail from '@/components/users/UserDetail'
+import TechniciansList from '@/components/users/TechniciansList'
+import AssignedTickets from '@/components/workflow/AssignedTickets'
+import UnassignedTickets from '@/components/workflow/UnassignedTickets'
+import HighPriorityTickets from '@/components/workflow/HighPriorityTickets'
+import CriticalPriorityTickets from '@/components/workflow/CriticalPriorityTickets'
+import TeamTickets from '@/components/workflow/TeamTickets'
 
 const rootRoute = createRootRoute()
 
@@ -107,31 +118,31 @@ const workflowRoute = createRoute({
 const assignedTicketsRoute = createRoute({
   getParentRoute: () => workflowRoute,
   path: '/assigned',
-  component: () => <div>Assigned Tickets</div>, // TODO: Implement component
+  component: AssignedTickets,
 })
 
 const unassignedTicketsRoute = createRoute({
   getParentRoute: () => workflowRoute,
   path: '/unassigned',
-  component: () => <div>Unassigned Tickets</div>, // TODO: Implement component
+  component: UnassignedTickets,
 })
 
 const highPriorityRoute = createRoute({
   getParentRoute: () => workflowRoute,
   path: '/priority/high',
-  component: () => <div>High Priority Tickets</div>, // TODO: Implement component
+  component: HighPriorityTickets,
 })
 
 const criticalPriorityRoute = createRoute({
   getParentRoute: () => workflowRoute,
   path: '/priority/critical',
-  component: () => <div>Critical Priority Tickets</div>, // TODO: Implement component
+  component: CriticalPriorityTickets,
 })
 
 const teamTicketsRoute = createRoute({
   getParentRoute: () => workflowRoute,
   path: '/team/$team',
-  component: () => <div>Team Tickets</div>, // TODO: Implement component
+  component: TeamTickets,
 })
 
 // User management routes (Technician/Admin only)
@@ -144,25 +155,25 @@ const usersRoute = createRoute({
       throw redirect({ to: '/dashboard' })
     }
   },
-  component: () => <div>Users List</div>, // TODO: Implement component
+  component: UserList,
 })
 
 const userDetailRoute = createRoute({
   getParentRoute: () => usersRoute,
   path: '/$id',
-  component: () => <div>User Detail</div>, // TODO: Implement component
+  component: UserDetail,
 })
 
 const userEditRoute = createRoute({
   getParentRoute: () => usersRoute,
   path: '/$id/edit',
-  component: () => <div>Edit User</div>, // TODO: Implement component
+  component: () => <div>Edit User - Under Construction</div>, // TODO: Implement component
 })
 
 const techniciansRoute = createRoute({
   getParentRoute: () => usersRoute,
   path: '/technicians',
-  component: () => <div>Available Technicians</div>, // TODO: Implement component
+  component: TechniciansList,
 })
 
 // Admin routes (Admin only)
@@ -180,19 +191,19 @@ const adminRoute = createRoute({
 const adminDashboardRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/dashboard',
-  component: () => <div>Admin Dashboard</div>, // TODO: Implement component
+  component: AdminDashboard,
 })
 
 const adminUsersRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/users',
-  component: () => <div>Admin User Management</div>, // TODO: Implement component
+  component: AdminUserManagement,
 })
 
 const adminStatisticsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/statistics',
-  component: () => <div>System Statistics</div>, // TODO: Implement component
+  component: SystemStatistics,
 })
 
 const adminSettingsRoute = createRoute({
