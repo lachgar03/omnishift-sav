@@ -1,5 +1,27 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { 
+  Container, 
+  Title, 
+  Text, 
+  Grid, 
+  Card, 
+  Group, 
+  Stack, 
+  Badge, 
+  Button,
+  Alert,
+  Skeleton,
+  ActionIcon,
+  Tooltip,
+  Select
+} from '@mantine/core'
+import { 
+  IconTicket, 
+  IconRefresh, 
+  IconCalendar,
+  IconAlertTriangle
+} from '@tabler/icons-react'
 import { ticketsApi, usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
@@ -59,280 +81,200 @@ export default function UnassignedTickets() {
 
   if (isLoading) {
     return (
-      <div className="unassigned-tickets">
-        <h1>Unassigned Tickets</h1>
-        <div>Loading unassigned tickets...</div>
-      </div>
+      <Container size="xl" py="md">
+        <Group justify="space-between" mb="lg">
+          <Group gap="sm">
+            <IconTicket size="2rem" />
+            <Title order={1}>Unassigned Tickets</Title>
+          </Group>
+        </Group>
+        <Grid>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Grid.Col key={i} span={{ base: 12, sm: 6, md: 4 }}>
+              <Skeleton height={200} />
+            </Grid.Col>
+          ))}
+        </Grid>
+      </Container>
     )
   }
 
   if (error) {
     return (
-      <div className="unassigned-tickets">
-        <h1>Unassigned Tickets</h1>
-        <div className="error-message" style={{ color: 'red', padding: '10px' }}>
-          Error loading tickets: {getErrorMessage(error)}
-        </div>
-      </div>
+      <Container size="xl" py="md">
+        <Group justify="space-between" mb="lg">
+          <Group gap="sm">
+            <IconTicket size="2rem" />
+            <Title order={1}>Unassigned Tickets</Title>
+          </Group>
+        </Group>
+        <Alert color="red" title="Error loading tickets">
+          {getErrorMessage(error)}
+        </Alert>
+      </Container>
     )
   }
 
   // Filter for truly unassigned tickets
-  const unassignedTickets = tickets?.filter(
+  const unassignedTickets = Array.isArray(tickets) ? tickets.filter(
     (ticket: TicketResponse) => !ticket.assignedUserId && !ticket.assignedTeam,
-  )
+  ) : []
 
   const priorityOrder = { CRITICAL: 1, HIGH: 2, MEDIUM: 3, LOW: 4 }
   const sortedTickets = unassignedTickets?.sort((a: TicketResponse, b: TicketResponse) => {
     const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 5) - (priorityOrder[b.priority as keyof typeof priorityOrder] || 5)
     if (priorityDiff !== 0) return priorityDiff
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  })
+  }) || []
 
   return (
-    <div className="unassigned-tickets">
-      <h1>Unassigned Tickets</h1>
+    <Container size="xl" py="md">
+      <Group justify="space-between" mb="lg">
+        <Group gap="sm">
+          <IconTicket size="2rem" />
+          <Title order={1}>Unassigned Tickets</Title>
+        </Group>
+        <Tooltip label="Refresh tickets">
+          <ActionIcon variant="subtle" onClick={() => queryClient.invalidateQueries({ queryKey: ['tickets'] })}>
+            <IconRefresh size="1rem" />
+          </ActionIcon>
+        </Tooltip>
+      </Group>
 
       {actionError && (
-        <div
-          className="error-banner"
-          style={{
-            backgroundColor: '#fee',
-            color: '#c00',
-            padding: '10px',
-            marginBottom: '20px',
-            borderRadius: '4px',
-            border: '1px solid #fcc',
-          }}
-        >
+        <Alert color="red" title="Action Error" mb="md">
           {actionError}
-        </div>
+        </Alert>
       )}
 
       {sortedTickets && sortedTickets.length > 0 && (
-        <div
-          className="tickets-summary"
-          style={{
-            marginBottom: '20px',
-            padding: '15px',
-            backgroundColor: '#fff3cd',
-            borderRadius: '8px',
-            border: '1px solid #ffeaa7',
-          }}
-        >
+        <Alert color="yellow" title="Unassigned Tickets" mb="md" icon={<IconAlertTriangle size="1rem" />}>
           <strong>{sortedTickets.length}</strong> unassigned ticket
           {sortedTickets.length !== 1 ? 's' : ''} requiring attention
-        </div>
+        </Alert>
       )}
 
-      <div
-        className="tickets-grid"
-        style={{
-          display: 'grid',
-          gap: '20px',
-        }}
-      >
+      <Grid>
         {sortedTickets?.map((ticket: TicketResponse) => (
-          <div
-            key={ticket.id}
-            className="ticket-card"
-            style={{
-              border: '1px solid #ddd',
-              borderRadius: '8px',
-              padding: '20px',
-              backgroundColor: '#fff',
-              borderLeft: `4px solid ${getPriorityColor(ticket.priority)}`,
-            }}
-          >
-            <div
-              className="ticket-header"
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '15px',
-              }}
-            >
-              <div>
-                <h3 style={{ margin: '0 0 5px 0' }}>
-                  <a
-                    href={`/tickets/${ticket.id}`}
-                    style={{ textDecoration: 'none', color: '#007bff' }}
+          <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
+            <Card withBorder style={{ borderLeft: `4px solid ${getPriorityColor(ticket.priority)}` }}>
+              <Stack gap="md">
+                <Group justify="space-between">
+                  <div>
+                    <Title order={4}>
+                      <a
+                        href={`/tickets/${ticket.id}`}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        #{ticket.id} - {ticket.title}
+                      </a>
+                    </Title>
+                    <Group gap="xs" mt="xs">
+                      <IconCalendar size="0.8rem" />
+                      <Text size="sm" c="dimmed">
+                        {formatDate(ticket.createdAt)}
+                      </Text>
+                    </Group>
+                  </div>
+
+                  <Stack gap="xs" align="flex-end">
+                    <Badge color={getStatusColor(ticket.status)} variant="light">
+                      {ticket.status}
+                    </Badge>
+                    <Badge color={getPriorityColor(ticket.priority)} variant="outline">
+                      {ticket.priority}
+                    </Badge>
+                  </Stack>
+                </Group>
+
+                <Stack gap="xs">
+                  <Group gap="xs">
+                    <Text fw={500} size="sm">Type:</Text>
+                    <Text size="sm">{ticket.type}</Text>
+                  </Group>
+
+                  <div>
+                    <Text fw={500} size="sm" mb="xs">Description:</Text>
+                    <Text
+                      size="sm"
+                      c="dimmed"
+                      style={{
+                        lineHeight: '1.4',
+                        maxHeight: '60px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {ticket.description}
+                    </Text>
+                  </div>
+                </Stack>
+
+                <Stack gap="md" pt="md" style={{ borderTop: '1px solid #dee2e6' }}>
+                  <Title order={5}>Assign Ticket</Title>
+
+                  {/* Team Assignment */}
+                  <Stack gap="xs">
+                    <Text fw={500} size="sm">Assign to Team:</Text>
+                    <Group gap="xs">
+                      <Button
+                        size="xs"
+                        color="cyan"
+                        onClick={() => handleTeamAssignment(ticket.id, Team.SUPPORT)}
+                        loading={assignTeamMutation.isPending}
+                      >
+                        Support Team
+                      </Button>
+                      <Button
+                        size="xs"
+                        color="violet"
+                        onClick={() => handleTeamAssignment(ticket.id, Team.DEVELOPMENT)}
+                        loading={assignTeamMutation.isPending}
+                      >
+                        Development Team
+                      </Button>
+                    </Group>
+                  </Stack>
+
+                  {/* User Assignment */}
+                  <Stack gap="xs">
+                    <Text fw={500} size="sm">Assign to Technician:</Text>
+                    <Select
+                      placeholder="Select a technician..."
+                      data={technicians?.map((tech: UserResponse) => ({
+                        value: tech.id,
+                        label: tech.fullName || `${tech.firstName} ${tech.lastName}`,
+                      })) || []}
+                      onChange={(value) => {
+                        if (value) {
+                          handleUserAssignment(ticket.id, value)
+                        }
+                      }}
+                      disabled={assignUserMutation.isPending}
+                    />
+                  </Stack>
+
+                  {/* View Details */}
+                  <Button
+                    fullWidth
+                    variant="light"
+                    leftSection={<IconTicket size="1rem" />}
+                    onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
                   >
-                    #{ticket.id} - {ticket.title}
-                  </a>
-                </h3>
-                <div style={{ fontSize: '14px', color: '#666' }}>
-                  Created: {formatDate(ticket.createdAt)}
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ marginBottom: '5px' }}>
-                  <span
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      backgroundColor: getStatusColor(ticket.status),
-                      color: 'white',
-                    }}
-                  >
-                    {ticket.status}
-                  </span>
-                </div>
-                <div>
-                  <span
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      backgroundColor: getPriorityColor(ticket.priority),
-                      color: 'white',
-                    }}
-                  >
-                    {ticket.priority}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="ticket-content" style={{ marginBottom: '15px' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Type:</div>
-              <div style={{ marginBottom: '10px' }}>{ticket.type}</div>
-
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Description:</div>
-              <div
-                style={{
-                  color: '#666',
-                  lineHeight: '1.4',
-                  maxHeight: '60px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {ticket.description}
-              </div>
-            </div>
-
-            <div
-              className="assignment-actions"
-              style={{
-                paddingTop: '15px',
-                borderTop: '1px solid #dee2e6',
-              }}
-            >
-              <h4 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Assign Ticket</h4>
-
-              {/* Team Assignment */}
-              <div style={{ marginBottom: '15px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '5px',
-                    fontWeight: 'bold',
-                    fontSize: '14px',
-                  }}
-                >
-                  Assign to Team:
-                </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#17a2b8',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    }}
-                    onClick={() => handleTeamAssignment(ticket.id, Team.SUPPORT)}
-                    disabled={assignTeamMutation.isPending}
-                  >
-                    Support Team
-                  </button>
-                  <button
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#6f42c1',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                    }}
-                    onClick={() => handleTeamAssignment(ticket.id, Team.DEVELOPMENT)}
-                    disabled={assignTeamMutation.isPending}
-                  >
-                    Development Team
-                  </button>
-                </div>
-              </div>
-
-              {/* User Assignment */}
-              <div style={{ marginBottom: '15px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '5px',
-                    fontWeight: 'bold',
-                    fontSize: '14px',
-                  }}
-                >
-                  Assign to Technician:
-                </label>
-                <select
-                  style={{
-                    width: '100%',
-                    padding: '6px',
-                    borderRadius: '4px',
-                    border: '1px solid #ccc',
-                  }}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      handleUserAssignment(ticket.id, e.target.value)
-                    }
-                  }}
-                  value=""
-                  disabled={assignUserMutation.isPending}
-                >
-                  <option value="">Select a technician...</option>
-                  {technicians?.map((tech: UserResponse) => (
-                    <option key={tech.id} value={tech.id}>
-                      {tech.fullName || `${tech.firstName} ${tech.lastName}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* View Details */}
-              <button
-                style={{
-                  width: '100%',
-                  padding: '8px 15px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                }}
-                onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
-              >
-                View Full Details
-              </button>
-            </div>
-          </div>
+                    View Full Details
+                  </Button>
+                </Stack>
+              </Stack>
+            </Card>
+          </Grid.Col>
         ))}
-      </div>
+      </Grid>
 
       {sortedTickets && sortedTickets.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-          <h3>No unassigned tickets</h3>
-          <p>All tickets have been assigned to teams or technicians.</p>
-        </div>
+        <Alert color="blue" title="No unassigned tickets" icon={<IconTicket size="1rem" />}>
+          All tickets have been assigned to teams or technicians.
+        </Alert>
       )}
-    </div>
+    </Container>
   )
 }
