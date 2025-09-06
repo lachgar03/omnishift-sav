@@ -25,7 +25,6 @@ export default function TestForm() {
   })
 
   const onSubmit = (values: FormValues) => {
-    // eslint-disable-next-line no-console
     console.log('TestForm submit:', values)
   }
 
@@ -34,8 +33,20 @@ export default function TestForm() {
       <Title order={3}>Test Form</Title>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Stack>
-          <FormInput control={control} name="email" label="Email" placeholder="you@example.com" type="email" />
-          <FormInput control={control} name="password" label="Password" placeholder="Your password" type="password" />
+          <FormInput
+            control={control}
+            name="email"
+            label="Email"
+            placeholder="you@example.com"
+            type="email"
+          />
+          <FormInput
+            control={control}
+            name="password"
+            label="Password"
+            placeholder="Your password"
+            type="password"
+          />
           <Button type="submit" loading={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
             Submit
           </Button>
@@ -44,5 +55,3 @@ export default function TestForm() {
     </Stack>
   )
 }
-
-

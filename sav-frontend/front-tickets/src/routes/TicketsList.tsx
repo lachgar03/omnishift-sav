@@ -9,25 +9,26 @@ export default function TicketsList() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(10)
-  
+
   const { data } = useQuery({
     queryKey: ['tickets', page, pageSize],
-    queryFn: () => ticketsApi.getAll({
-      page,
-      size: pageSize,
-      sortBy: 'createdAt',
-      sortDirection: 'desc'
-    })
+    queryFn: () =>
+      ticketsApi.getAll({
+        page,
+        size: pageSize,
+        sortBy: 'createdAt',
+        sortDirection: 'desc',
+      }),
   })
-  
+
   const handleTicketClick = (ticket: TicketResponse) => {
     navigate({ to: `/tickets/${ticket.id}` })
   }
-  
+
   const handlePageChange = (newPage: number) => {
     setPage(newPage)
   }
-  
+
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize)
   }
@@ -35,7 +36,7 @@ export default function TicketsList() {
   return (
     <div className="tickets-list-page">
       <h1>All Tickets</h1>
-      
+
       <TicketList
         title="Tickets"
         tickets={data?.content}
@@ -50,5 +51,3 @@ export default function TicketsList() {
     </div>
   )
 }
-
-

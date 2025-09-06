@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/authStore'
 import { Link } from '@tanstack/react-router'
 
 export const Navigation = () => {
-  const {  isUser, isTechnician, isAdmin } = useAuthStore()
+  const { isUser, isTechnician, isAdmin } = useAuthStore()
 
   const renderUserNavigation = () => (
     <>
@@ -112,14 +112,12 @@ export const Navigation = () => {
           SAV System
         </Link>
       </div>
-      
-      <div className="nav-menu">
-        {renderNavigation()}
-      </div>
-      
+
+      <div className="nav-menu">{renderNavigation()}</div>
+
       <div className="nav-user">
         <span className="user-roles">
-          {isAdmin ? "Admin" : isTechnician ? "Technician" : isUser ? "User" : "Guest"}
+          {isAdmin ? 'Admin' : isTechnician ? 'Technician' : isUser ? 'User' : 'Guest'}
         </span>
       </div>
     </nav>

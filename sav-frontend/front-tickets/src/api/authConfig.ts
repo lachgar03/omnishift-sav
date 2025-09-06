@@ -1,9 +1,10 @@
 import Keycloak from 'keycloak-js'
 import { useAuthStore } from '@/store/authStore'
-import { UserRole, type AuthUser } from '@/types'
+import { UserRole } from '@/constants/roles'
+import type { AuthUser } from '@/types'
 
 const keycloakConfig: Keycloak.KeycloakConfig = {
-  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8081',
+  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8180',
   realm: import.meta.env.VITE_KEYCLOAK_REALM || 'sav-realm',
   clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'sav-frontend',
 }
@@ -100,18 +101,19 @@ function wireKeycloakEvents() {
 function syncStoreFromKeycloak() {
   const token = keycloak.token
   const parsed = keycloak.tokenParsed as Record<string, unknown> | undefined
-  
+
   if (!token || !parsed) return
-  
+
   // Map Keycloak roles to our UserRole enum
-  const keycloakRoles: string[] = Array.isArray((parsed?.realm_access as { roles?: string[] })?.roles)
+  const keycloakRoles: string[] = Array.isArray(
+    (parsed?.realm_access as { roles?: string[] })?.roles,
+  )
     ? ((parsed?.realm_access as { roles?: string[] })?.roles as string[])
-    : [];
+    : []
   const roles: UserRole[] = keycloakRoles
-    .map(role => role.toUpperCase())
-    .filter(role => Object.values(UserRole).includes(role as UserRole)) as UserRole[]
-  
- 
+    .map((role) => role.toUpperCase())
+    .filter((role) => Object.values(UserRole).includes(role as UserRole)) as UserRole[]
+
   const user: AuthUser = {
     id: String(parsed.sub ?? ''),
     username: String(parsed.preferred_username ?? ''),
@@ -119,8 +121,8 @@ function syncStoreFromKeycloak() {
     firstName: parsed.given_name ? String(parsed.given_name) : undefined,
     lastName: parsed.family_name ? String(parsed.family_name) : undefined,
     fullName: parsed.name ? String(parsed.name) : undefined,
-    roles: roles
+    roles: roles,
   }
-    
+
   useAuthStore.getState().setAuth(user, token)
 }

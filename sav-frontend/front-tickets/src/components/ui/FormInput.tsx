@@ -1,7 +1,6 @@
 import { Controller } from 'react-hook-form'
 import type { Control, FieldValues, Path } from 'react-hook-form'
 import { TextInput, PasswordInput } from '@mantine/core'
-import type { TextInputProps } from '@mantine/core'
 
 type Props<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>
@@ -9,7 +8,8 @@ type Props<TFieldValues extends FieldValues> = {
   label?: string
   placeholder?: string
   type?: 'text' | 'email' | 'password'
-} & Omit<TextInputProps, 'value' | 'onChange'>
+  [key: string]: unknown
+}
 
 export function FormInput<TFieldValues extends FieldValues>({
   control,
@@ -17,7 +17,6 @@ export function FormInput<TFieldValues extends FieldValues>({
   label,
   placeholder,
   type = 'text',
-  ...rest
 }: Props<TFieldValues>) {
   return (
     <Controller
@@ -29,8 +28,7 @@ export function FormInput<TFieldValues extends FieldValues>({
             label={label}
             placeholder={placeholder}
             error={fieldState.error?.message}
-            {...(field as any)}
-            {...(rest as any)}
+            {...field}
           />
         ) : (
           <TextInput
@@ -38,7 +36,6 @@ export function FormInput<TFieldValues extends FieldValues>({
             placeholder={placeholder}
             error={fieldState.error?.message}
             {...field}
-            {...rest}
           />
         )
       }

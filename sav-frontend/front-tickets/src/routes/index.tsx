@@ -9,11 +9,8 @@ import TestForm from '@components/TestForm'
 import TicketsList from '@routes/TicketsList'
 import MyTicketsList from '@routes/MyTicketsList'
 import TicketDetail from '@routes/TicketDetail'
-import { UserRole } from '../types'
-
-function NotFound() {
-  return <div>Page not found</div>
-}
+import { UserRole } from '@/constants/roles'
+import NotFound from '@components/NotFound'
 
 const rootRoute = createRootRoute()
 
@@ -207,10 +204,10 @@ const adminSettingsRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   publicRoute.addChildren([loginRoute, testFormRoute]),
   privateRoute.addChildren([
-    dashboardRoute, 
-    settingsRoute, 
-    ticketsRoute, 
-    myTicketsRoute, 
+    dashboardRoute,
+    settingsRoute,
+    ticketsRoute,
+    myTicketsRoute,
     ticketDetailRoute,
     workflowRoute.addChildren([
       assignedTicketsRoute,
@@ -219,11 +216,7 @@ export const routeTree = rootRoute.addChildren([
       criticalPriorityRoute,
       teamTicketsRoute,
     ]),
-    usersRoute.addChildren([
-      userDetailRoute,
-      userEditRoute,
-      techniciansRoute,
-    ]),
+    usersRoute.addChildren([userDetailRoute, userEditRoute, techniciansRoute]),
     adminRoute.addChildren([
       adminDashboardRoute,
       adminUsersRoute,

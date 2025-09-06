@@ -3,8 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/authStore'
 import { ticketsApi } from '@/api'
 import type { TicketResponse } from '@/types'
-import { TicketStatus, Priority, Team } from '@/types'
-import { getStatusColor, getPriorityColor, getStatusLabel, getPriorityLabel, getTeamLabel } from '@/utils/statusUtils'
+import { TicketStatus, Priority, Team } from '@/constants/roles'
+import {
+  getStatusColor,
+  getPriorityColor,
+  getStatusLabel,
+  getPriorityLabel,
+  getTeamLabel,
+} from '@/utils/statusUtils'
 import { formatDate } from '@/utils/formatDate'
 
 interface TicketListProps {
@@ -21,7 +27,7 @@ interface TicketListProps {
   totalItems?: number
 }
 
-export const TicketList = ({ 
+export const TicketList = ({
   title = 'Tickets',
   tickets: propTickets,
   showFilters = true,
@@ -32,10 +38,10 @@ export const TicketList = ({
   currentPage,
   pageSize,
   totalPages,
-  totalItems
+  totalItems,
 }: TicketListProps) => {
   const { isTechnician, isAdmin } = useAuthStore()
-  
+
   // State for filters
   const [filters, setFilters] = useState({
     status: '',
@@ -56,13 +62,13 @@ export const TicketList = ({
   const tickets = propTickets || fetchedTickets || []
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 0 }))
+    setFilters((prev) => ({ ...prev, [key]: value, page: 0 }))
     if (key === 'page' && onPageChange) {
       onPageChange(Number(value))
     }
   }
 
-  const filteredTickets = tickets.filter(ticket => {
+  const filteredTickets = tickets.filter((ticket) => {
     if (filters.status && ticket.status !== filters.status) return false
     if (filters.priority && ticket.priority !== filters.priority) return false
     if (filters.team && ticket.assignedTeam !== filters.team) return false
@@ -77,11 +83,7 @@ export const TicketList = ({
   })
 
   const renderTicketItem = (ticket: TicketResponse) => (
-    <div 
-      key={ticket.id} 
-      className="ticket-item"
-      onClick={() => onTicketClick?.(ticket)}
-    >
+    <div key={ticket.id} className="ticket-item" onClick={() => onTicketClick?.(ticket)}>
       <div className="ticket-header">
         <div className="ticket-meta">
           <span className={`status-badge status-${getStatusColor(ticket.status)}`}>
@@ -91,21 +93,13 @@ export const TicketList = ({
             {getPriorityLabel(ticket.priority)}
           </span>
         </div>
-        <div className="ticket-date">
-          {formatDate(ticket.createdAt)}
-        </div>
+        <div className="ticket-date">{formatDate(ticket.createdAt)}</div>
       </div>
-      
+
       <div className="ticket-content">
-        <h3 className="ticket-title">
-          {ticket.title}
-        </h3>
-        
-        {ticket.description && (
-          <p className="ticket-description">
-            {ticket.description}
-          </p>
-        )}
+        <h3 className="ticket-title">{ticket.title}</h3>
+
+        {ticket.description && <p className="ticket-description">{ticket.description}</p>}
       </div>
 
       <div className="ticket-footer">
@@ -117,12 +111,10 @@ export const TicketList = ({
             <span className="assigned-user">Assigned to: {ticket.assignedUserId}</span>
           )}
         </div>
-        
+
         <div className="ticket-actions">
           <button className="btn btn-sm btn-primary">View</button>
-          {(isTechnician || isAdmin) && (
-            <button className="btn btn-sm btn-secondary">Edit</button>
-          )}
+          {(isTechnician || isAdmin) && <button className="btn btn-sm btn-secondary">Edit</button>}
         </div>
       </div>
     </div>
@@ -134,33 +126,36 @@ export const TicketList = ({
     return (
       <div className="ticket-filters">
         <div className="filter-row">
-          <select 
-            value={filters.status} 
+          <select
+            value={filters.status}
             onChange={(e) => handleFilterChange('status', e.target.value)}
           >
             <option value="">All Status</option>
-            {Object.values(TicketStatus).map(status => (
-              <option key={status} value={status}>{getStatusLabel(status)}</option>
+            {Object.values(TicketStatus).map((status) => (
+              <option key={status} value={status}>
+                {getStatusLabel(status)}
+              </option>
             ))}
           </select>
 
-          <select 
-            value={filters.priority} 
+          <select
+            value={filters.priority}
             onChange={(e) => handleFilterChange('priority', e.target.value)}
           >
             <option value="">All Priorities</option>
-            {Object.values(Priority).map(priority => (
-              <option key={priority} value={priority}>{getPriorityLabel(priority)}</option>
+            {Object.values(Priority).map((priority) => (
+              <option key={priority} value={priority}>
+                {getPriorityLabel(priority)}
+              </option>
             ))}
           </select>
-          
-          <select 
-            value={filters.team} 
-            onChange={(e) => handleFilterChange('team', e.target.value)}
-          >
+
+          <select value={filters.team} onChange={(e) => handleFilterChange('team', e.target.value)}>
             <option value="">All Teams</option>
-            {Object.values(Team).map(team => (
-              <option key={team} value={team}>{getTeamLabel(team)}</option>
+            {Object.values(Team).map((team) => (
+              <option key={team} value={team}>
+                {getTeamLabel(team)}
+              </option>
             ))}
           </select>
         </div>
@@ -186,9 +181,7 @@ export const TicketList = ({
       <div className="ticket-list">
         <h2>{title}</h2>
         {renderFilters()}
-        <div className="no-tickets">
-          No tickets found.
-        </div>
+        <div className="no-tickets">No tickets found.</div>
       </div>
     )
   }
@@ -197,7 +190,7 @@ export const TicketList = ({
     if (onPageChange) {
       onPageChange(newPage)
     } else {
-      setFilters(prev => ({ ...prev, page: newPage }))
+      setFilters((prev) => ({ ...prev, page: newPage }))
     }
   }
 
@@ -206,7 +199,7 @@ export const TicketList = ({
     if (onPageSizeChange) {
       onPageSizeChange(newSize)
     } else {
-      setFilters(prev => ({ ...prev, size: newSize, page: 0 }))
+      setFilters((prev) => ({ ...prev, size: newSize, page: 0 }))
     }
   }
 
@@ -221,9 +214,7 @@ export const TicketList = ({
 
       {renderFilters()}
 
-      <div className="tickets-container">
-        {filteredTickets.map(renderTicketItem)}
-      </div>
+      <div className="tickets-container">{filteredTickets.map(renderTicketItem)}</div>
 
       {showPagination && (
         <div className="pagination">
@@ -234,15 +225,15 @@ export const TicketList = ({
           >
             Previous
           </button>
-          
+
           <span className="page-info">
             Page {(currentPage ?? filters.page) + 1}
             {totalPages && ` of ${totalPages}`}
             {totalItems && ` (${totalItems} items)`}
           </span>
-          
-          <select 
-            value={pageSize ?? filters.size} 
+
+          <select
+            value={pageSize ?? filters.size}
             onChange={handlePageSizeChange}
             className="page-size-select"
           >
@@ -250,20 +241,20 @@ export const TicketList = ({
             <option value="20">20 per page</option>
             <option value="50">50 per page</option>
           </select>
-          
+
           <button
             onClick={() => handlePageChange((currentPage ?? filters.page) + 1)}
-            disabled={totalPages ? (currentPage ?? filters.page) >= totalPages - 1 : filteredTickets.length < (pageSize ?? filters.size)}
+            disabled={
+              totalPages
+                ? (currentPage ?? filters.page) >= totalPages - 1
+                : filteredTickets.length < (pageSize ?? filters.size)
+            }
             className="btn btn-secondary"
           >
             Next
           </button>
-            </div>
-          )}
         </div>
-      )
-    }
-
-
-
-
+      )}
+    </div>
+  )
+}

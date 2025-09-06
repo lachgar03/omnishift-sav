@@ -4,13 +4,7 @@ import { ticketsApi, usersApi } from '@/api'
 import type { DashboardResponse, TicketStatsResponse } from '@/types'
 import { getStatusColor, getPriorityColor } from '@/utils/statusUtils'
 
-// Define the UserStatsResponse interface locally
-interface UserStatsResponse {
-  totalUsers: number;
-  activeUsers: number;
-  technicians: number;
-  admins: number;
-}
+import type { UserStatsResponse } from '@/types'
 
 export default function DashboardPage() {
   const authStore = useAuthStore()
@@ -56,12 +50,12 @@ export default function DashboardPage() {
           <p className="stat-number">{dashboardData?.myInProgressTickets || 0}</p>
         </div>
       </div>
-      
+
       {dashboardData?.recentTickets && dashboardData.recentTickets.length > 0 && (
         <div className="recent-tickets">
           <h3>Recent Tickets</h3>
           <div className="tickets-list">
-            {dashboardData.recentTickets.map(ticket => (
+            {dashboardData.recentTickets.map((ticket) => (
               <div key={ticket.id} className="ticket-item">
                 <span className={`status-badge status-${getStatusColor(ticket.status)}`}>
                   {ticket.status}
@@ -108,12 +102,12 @@ export default function DashboardPage() {
               <p className="stat-number">{ticketStats.totalTickets}</p>
             </div>
             <div className="stat-card">
-              <h4>Active Tickets</h4>
-              <p className="stat-number">{ticketStats.activeTickets}</p>
+              <h4>Assigned Tickets</h4>
+              <p className="stat-number">{ticketStats.assignedTickets}</p>
             </div>
             <div className="stat-card">
-              <h4>Completion Rate</h4>
-              <p className="stat-number">{ticketStats.completionRate.toFixed(1)}%</p>
+              <h4>Closed Tickets</h4>
+              <p className="stat-number">{ticketStats.closedTickets}</p>
             </div>
           </div>
         </div>
@@ -123,7 +117,7 @@ export default function DashboardPage() {
         <div className="urgent-tickets">
           <h3>Urgent Tickets</h3>
           <div className="tickets-list">
-            {dashboardData.urgentTickets.map(ticket => (
+            {dashboardData.urgentTickets.map((ticket) => (
               <div key={ticket.id} className="ticket-item urgent">
                 <span className={`status-badge status-${getStatusColor(ticket.status)}`}>
                   {ticket.status}
@@ -146,7 +140,7 @@ export default function DashboardPage() {
   const renderAdminDashboard = () => (
     <div className="dashboard-section">
       <h2>Admin Dashboard</h2>
-      
+
       {userStats && (
         <div className="user-stats">
           <h3>User Statistics</h3>
@@ -188,12 +182,12 @@ export default function DashboardPage() {
               <p className="stat-number">{ticketStats.inProgressTickets}</p>
             </div>
             <div className="stat-card">
-              <h4>Resolved</h4>
-              <p className="stat-number">{ticketStats.resolvedTickets}</p>
+              <h4>Open Tickets</h4>
+              <p className="stat-number">{ticketStats.openTickets}</p>
             </div>
             <div className="stat-card">
-              <h4>Completion Rate</h4>
-              <p className="stat-number">{ticketStats.completionRate.toFixed(1)}%</p>
+              <h4>Closed Tickets</h4>
+              <p className="stat-number">{ticketStats.closedTickets}</p>
             </div>
           </div>
         </div>
@@ -203,7 +197,7 @@ export default function DashboardPage() {
         <div className="unassigned-tickets">
           <h3>Unassigned Tickets</h3>
           <div className="tickets-list">
-            {dashboardData.unassignedTickets.map(ticket => (
+            {dashboardData.unassignedTickets.map((ticket) => (
               <div key={ticket.id} className="ticket-item unassigned">
                 <span className={`status-badge status-${getStatusColor(ticket.status)}`}>
                   {ticket.status}
@@ -239,7 +233,7 @@ export default function DashboardPage() {
         <h1>Welcome to SAV System</h1>
         <p>Support ticket management dashboard</p>
       </div>
-      
+
       {renderDashboard()}
     </div>
   )

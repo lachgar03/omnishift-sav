@@ -6,11 +6,10 @@ import { MantineProvider } from '@mantine/core'
 import { initAuth, queryClient } from './api'
 import { router } from './routes'
 
-
 if (import.meta.env.DEV) {
   // Verify env variables at runtime (dev only)
   // Note: Vite injects env vars prefixed with VITE_
-  // eslint-disable-next-line no-console
+
   console.info('Runtime env', {
     MODE: import.meta.env.MODE,
     VITE_API_URL: import.meta.env.VITE_API_URL,
@@ -29,7 +28,7 @@ async function start() {
           <RouterProvider router={router} />
         </QueryClientProvider>
       </MantineProvider>
-    </StrictMode>
+    </StrictMode>,
   )
 }
 

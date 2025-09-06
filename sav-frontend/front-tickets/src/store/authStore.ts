@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { UserRole, type AuthUser } from '@/types'
+import { UserRole } from '@/constants/roles'
+import type { AuthUser } from '@/types'
 
 interface AuthState {
   user: AuthUser | null
@@ -29,24 +30,24 @@ export const useAuthStore = create<AuthState>()(
       isUser: false,
 
       setAuth: (user: AuthUser, token: string) => {
-        set({ 
-          user, 
-          token, 
+        set({
+          user,
+          token,
           isAuthenticated: true,
           isAdmin: user.roles?.includes(UserRole.ADMIN) ?? false,
           isTechnician: user.roles?.includes(UserRole.TECHNICIAN) ?? false,
-          isUser: user.roles?.includes(UserRole.USER) ?? false
+          isUser: user.roles?.includes(UserRole.USER) ?? false,
         })
       },
 
       clearAuth: () => {
-        set({ 
-          user: null, 
-          token: null, 
+        set({
+          user: null,
+          token: null,
           isAuthenticated: false,
           isAdmin: false,
           isTechnician: false,
-          isUser: false
+          isUser: false,
         })
       },
 
@@ -55,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
         const authUser: AuthUser = user || {
           id: '',
           username: '',
-          roles: roles
+          roles: roles,
         }
         get().setAuth(authUser, accessToken)
       },
@@ -71,16 +72,16 @@ export const useAuthStore = create<AuthState>()(
 
       hasAnyRole: (roles: UserRole[]) => {
         const { user } = get()
-        return roles.some(role => user?.roles?.includes(role)) ?? false
-      }
+        return roles.some((role) => user?.roles?.includes(role)) ?? false
+      },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
-        user: state.user, 
-        token: state.token, 
-        isAuthenticated: state.isAuthenticated 
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 )

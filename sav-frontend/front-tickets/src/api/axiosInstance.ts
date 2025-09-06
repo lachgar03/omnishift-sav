@@ -2,7 +2,6 @@ import axios from 'axios'
 import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { getToken, refreshToken, logout } from './authConfig'
 
-// Route API requests through the gateway. Prefer env var but default to gateway on 8081
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api'
 
 export const axiosInstance = axios.create({ baseURL })
@@ -11,15 +10,16 @@ import type { InternalAxiosRequestConfig } from 'axios'
 
 axiosInstance.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const token = await getToken()
+
+  // Set default headers according to backend guide
+  config.headers = config.headers || {}
+
+  // Set standard headers
+  const headers = config.headers as Record<string, string>
+  headers['Content-Type'] = 'application/json'
+  headers['Accept'] = 'application/json'
   if (token) {
-    config.headers = config.headers || {}
-    // For Axios v1+, headers may be AxiosHeaders instance or plain object
-    // Use set if available, else fallback to object assignment
-    if (typeof (config.headers as any).set === 'function') {
-      (config.headers as any).set('Authorization', `Bearer ${token}`)
-    } else {
-      (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
-    }
+    headers['Authorization'] = `Bearer ${token}`
   }
   return config
 })
@@ -30,6 +30,7 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
     const status = error.response?.status
 
+    // Handle authentication errors
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       try {
@@ -40,6 +41,8 @@ axiosInstance.interceptors.response.use(
             originalRequest.headers = {
               ...(originalRequest.headers || {}),
               Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
             }
           }
           return axiosInstance(originalRequest)
@@ -48,6 +51,19 @@ axiosInstance.interceptors.response.use(
         // fallthrough to logout
       }
       await logout()
+    }
+
+    // Log different error types for debugging
+    if (status === 400) {
+      console.warn('Bad Request:', error.response?.data)
+    } else if (status === 403) {
+      console.warn('Forbidden - Insufficient permissions:', error.response?.data)
+    } else if (status === 404) {
+      console.warn('Resource not found:', error.response?.data)
+    } else if (status === 422) {
+      console.warn('Validation errors:', error.response?.data)
+    } else if (status === 500) {
+      console.error('Server error:', error.response?.data)
     }
 
     return Promise.reject(error)

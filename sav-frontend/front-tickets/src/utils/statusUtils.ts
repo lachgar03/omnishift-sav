@@ -1,4 +1,4 @@
-import { TicketStatus, Priority, Team } from '@/types'
+import { TicketStatus, Priority, Team } from '@/constants/roles'
 
 export const getStatusColor = (status: TicketStatus): string => {
   switch (status) {

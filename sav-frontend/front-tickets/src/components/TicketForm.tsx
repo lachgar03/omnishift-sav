@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ticketsApi } from '@/api'
 import type { CreateTicketRequest } from '@/types'
-import { TicketType, Priority } from '@/types'
+import { TicketType, Priority } from '@/constants/roles'
 import { useNavigate } from '@tanstack/react-router'
 
 interface TicketFormProps {
@@ -13,7 +13,7 @@ interface TicketFormProps {
 export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  
+
   const [formData, setFormData] = useState<CreateTicketRequest>({
     title: '',
     description: '',
@@ -28,7 +28,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       queryClient.invalidateQueries({ queryKey: ['my-tickets'] })
-      
+
       if (onSuccess) {
         onSuccess()
       } else {
@@ -63,7 +63,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -71,11 +71,14 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
     createTicketMutation.mutate(formData)
   }
 
-  const handleInputChange = (field: keyof CreateTicketRequest, value: string | TicketType | Priority) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleInputChange = (
+    field: keyof CreateTicketRequest,
+    value: string | TicketType | Priority,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
+      setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
   }
 
@@ -92,13 +95,17 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
     { value: Priority.LOW, label: 'Low', description: 'Minor issues, general questions' },
     { value: Priority.MEDIUM, label: 'Medium', description: 'Standard support requests' },
     { value: Priority.HIGH, label: 'High', description: 'Issues affecting productivity' },
-    { value: Priority.CRITICAL, label: 'Critical', description: 'System down, urgent business impact' },
+    {
+      value: Priority.CRITICAL,
+      label: 'Critical',
+      description: 'System down, urgent business impact',
+    },
   ]
 
   return (
     <div className="ticket-form">
       <h2>Create New Support Ticket</h2>
-      
+
       <form onSubmit={handleSubmit} className="form">
         <div className="form-group">
           <label htmlFor="title" className="form-label">
@@ -127,7 +134,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
             onChange={(e) => handleInputChange('type', e.target.value as TicketType)}
             className="form-select"
           >
-            {ticketTypeOptions.map(option => (
+            {ticketTypeOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -145,7 +152,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
             onChange={(e) => handleInputChange('priority', e.target.value as Priority)}
             className="form-select"
           >
-            {priorityOptions.map(option => (
+            {priorityOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label} - {option.description}
               </option>
@@ -189,9 +196,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
         </div>
 
         {createTicketMutation.isError && (
-          <div className="error-banner">
-            Failed to create ticket. Please try again.
-          </div>
+          <div className="error-banner">Failed to create ticket. Please try again.</div>
         )}
       </form>
     </div>

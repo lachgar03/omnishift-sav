@@ -1,12 +1,12 @@
 export const API_BASE_URL = 'http://localhost:8081/api'
-export const KEYCLOAK_URL = 'http://localhost:8081'
+export const KEYCLOAK_URL = 'http://localhost:8180'
 export const KEYCLOAK_REALM = 'sav-realm'
 export const KEYCLOAK_CLIENT_ID = 'sav-frontend'
 
 export const API_ENDPOINTS = {
   // Auth
   DEBUG_TOKEN: '/debug/token-info',
-  
+
   // Users
   USERS_ME: '/users/me',
   USERS: '/users',
@@ -15,7 +15,7 @@ export const API_ENDPOINTS = {
   USERS_BY_STATUS: '/users/status',
   USERS_SEARCH: '/users/search',
   USERS_STATISTICS: '/users/statistics',
-  
+
   // Tickets
   TICKETS: '/tickets',
   TICKETS_MY: '/tickets/my-tickets',
@@ -25,10 +25,10 @@ export const API_ENDPOINTS = {
   TICKETS_BY_PRIORITY: '/tickets/priority',
   TICKETS_BY_TEAM: '/tickets/team',
   TICKETS_STATISTICS: '/tickets/statistics',
-  
+
   // Ticket Messages
   TICKET_MESSAGES: '/tickets/{ticketId}/messages',
-  
+
   // Ticket Attachments
   TICKET_ATTACHMENTS: '/tickets/{ticketId}/attachments',
   TICKET_ATTACHMENTS_DOWNLOAD: '/tickets/{ticketId}/attachments/{attachmentId}/download',
@@ -42,7 +42,6 @@ export const HTTP_STATUS = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+  UNPROCESSABLE_ENTITY: 422,
   INTERNAL_SERVER_ERROR: 500,
 } as const
-
-
