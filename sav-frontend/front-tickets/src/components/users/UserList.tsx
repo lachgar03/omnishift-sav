@@ -1,26 +1,26 @@
 import { useQuery } from '@tanstack/react-query'
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Grid, 
-  Card, 
-  Group, 
-  Stack, 
-  Badge, 
-  Avatar, 
+import {
+  Container,
+  Title,
+  Text,
+  Grid,
+  Card,
+  Group,
+  Stack,
+  Badge,
+  Avatar,
   Skeleton,
   Alert,
   ActionIcon,
-  Tooltip
+  Tooltip,
 } from '@mantine/core'
-import { 
-  IconUsers, 
-  IconRefresh, 
-  IconEye, 
-  IconEdit, 
+import {
+  IconUsers,
+  IconRefresh,
+  IconEye,
+  IconEdit,
   IconPhone,
-  IconCalendar
+  IconCalendar,
 } from '@tabler/icons-react'
 import { usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
@@ -32,7 +32,7 @@ export default function UserList() {
     data: users,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery<UserResponse[]>({
     queryKey: ['users'],
     queryFn: () => usersApi.getAll(),
@@ -91,11 +91,14 @@ export default function UserList() {
                   <Avatar size="lg" color="blue">
                     {(user.firstName?.[0] || '') + (user.lastName?.[0] || '')}
                   </Avatar>
-                  <Badge 
+                  <Badge
                     color={
-                      user.status === 'ACTIVE' ? 'green' : 
-                      user.status === 'SUSPENDED' ? 'red' : 'yellow'
-                    } 
+                      user.status === 'ACTIVE'
+                        ? 'green'
+                        : user.status === 'SUSPENDED'
+                          ? 'red'
+                          : 'yellow'
+                    }
                     variant="light"
                   >
                     {user.status}
@@ -103,11 +106,13 @@ export default function UserList() {
                 </Group>
 
                 <div>
-                  <Title order={4}>
-                    {user.fullName || `${user.firstName} ${user.lastName}`}
-                  </Title>
-                  <Text c="dimmed" size="sm">@{user.username}</Text>
-                  <Text c="dimmed" size="sm">{user.email}</Text>
+                  <Title order={4}>{user.fullName || `${user.firstName} ${user.lastName}`}</Title>
+                  <Text c="dimmed" size="sm">
+                    @{user.username}
+                  </Text>
+                  <Text c="dimmed" size="sm">
+                    {user.email}
+                  </Text>
                 </div>
 
                 <Stack gap="xs">
@@ -117,7 +122,7 @@ export default function UserList() {
                       <Text size="sm">{user.phoneNumber}</Text>
                     </Group>
                   )}
-                  
+
                   {user.company && (
                     <Group gap="xs">
                       <IconUsers size="1rem" />
@@ -131,7 +136,7 @@ export default function UserList() {
                       <Text size="sm">{user.department}</Text>
                     </Group>
                   )}
-                  
+
                   <Group gap="xs">
                     <IconCalendar size="1rem" />
                     <Text size="sm">Created: {formatDate(user.createdAt)}</Text>
@@ -139,10 +144,9 @@ export default function UserList() {
                 </Stack>
 
                 <Group justify="space-between">
-                  <Badge 
+                  <Badge
                     color={
-                      user.role === 'ADMIN' ? 'red' :
-                      user.role === 'TECHNICIAN' ? 'blue' : 'green'
+                      user.role === 'ADMIN' ? 'red' : user.role === 'TECHNICIAN' ? 'blue' : 'green'
                     }
                     variant="light"
                   >
@@ -151,8 +155,8 @@ export default function UserList() {
 
                   <Group gap="xs">
                     <Tooltip label="View user">
-                      <ActionIcon 
-                        variant="subtle" 
+                      <ActionIcon
+                        variant="subtle"
                         color="blue"
                         onClick={() => {
                           // TODO: Navigate to user detail page
@@ -162,10 +166,10 @@ export default function UserList() {
                         <IconEye size="1rem" />
                       </ActionIcon>
                     </Tooltip>
-                    
+
                     <Tooltip label="Edit user">
-                      <ActionIcon 
-                        variant="subtle" 
+                      <ActionIcon
+                        variant="subtle"
                         color="green"
                         onClick={() => {
                           // TODO: Navigate to edit user page

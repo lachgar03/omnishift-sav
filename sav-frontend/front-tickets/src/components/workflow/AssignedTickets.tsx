@@ -38,7 +38,9 @@ export default function AssignedTickets() {
   const priorityOrder = { CRITICAL: 1, HIGH: 2, MEDIUM: 3, LOW: 4 }
   const sortedTickets = tickets?.sort((a: TicketResponse, b: TicketResponse) => {
     // Sort by priority first, then by creation date
-    const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 5) - (priorityOrder[b.priority as keyof typeof priorityOrder] || 5)
+    const priorityDiff =
+      (priorityOrder[a.priority as keyof typeof priorityOrder] || 5) -
+      (priorityOrder[b.priority as keyof typeof priorityOrder] || 5)
     if (priorityDiff !== 0) return priorityDiff
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })

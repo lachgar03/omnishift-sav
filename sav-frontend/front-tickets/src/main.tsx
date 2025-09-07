@@ -28,6 +28,21 @@ const theme = createTheme({
 
 async function start() {
   await initAuth()
+  
+  // Add custom CSS for sidebar selection
+  const style = document.createElement('style')
+  style.textContent = `
+    .sidebar-navbar ::selection {
+      background-color: rgba(255, 255, 255, 0.3) !important;
+      color: white !important;
+    }
+    .sidebar-navbar ::-moz-selection {
+      background-color: rgba(255, 255, 255, 0.3) !important;
+      color: white !important;
+    }
+  `
+  document.head.appendChild(style)
+  
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <MantineProvider theme={theme}>

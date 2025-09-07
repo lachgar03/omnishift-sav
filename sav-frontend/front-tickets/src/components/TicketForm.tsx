@@ -1,5 +1,18 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  Card,
+  Stack,
+  TextInput,
+  Select,
+  Textarea,
+  Button,
+  Group,
+  Alert,
+  Text,
+  Title,
+} from '@mantine/core'
+import { IconAlertCircle } from '@tabler/icons-react'
 import { ticketsApi } from '@/api'
 import type { CreateTicketRequest, TicketResponse } from '@/types'
 import { TicketType, Priority } from '@/constants/roles'
@@ -114,118 +127,94 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
   ]
 
   return (
-    <div className="ticket-form">
-      <h2>Create New Support Ticket</h2>
+    <Card withBorder>
+      <Stack gap="md">
+        <Title order={2}>Create New Support Ticket</Title>
 
-      {apiError && (
-        <div
-          className="error-banner"
-          style={{
-            backgroundColor: '#fee',
-            color: '#c00',
-            padding: '10px',
-            marginBottom: '20px',
-            borderRadius: '4px',
-            border: '1px solid #fcc',
-          }}
-        >
-          {apiError}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-group">
-          <label htmlFor="title" className="form-label">
-            Title *
-          </label>
-          <input
-            id="title"
-            type="text"
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            className={`form-input ${errors.title ? 'error' : ''}`}
-            placeholder="Brief description of the issue or request"
-            maxLength={100}
-          />
-          {errors.title && <span className="error-message">{errors.title}</span>}
-          <span className="char-count">{formData.title.length}/100</span>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="type" className="form-label">
-            Ticket Type *
-          </label>
-          <select
-            id="type"
-            value={formData.type}
-            onChange={(e) => handleInputChange('type', e.target.value as TicketType)}
-            className="form-select"
-          >
-            {ticketTypeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="priority" className="form-label">
-            Priority *
-          </label>
-          <select
-            id="priority"
-            value={formData.priority}
-            onChange={(e) => handleInputChange('priority', e.target.value as Priority)}
-            className="form-select"
-          >
-            {priorityOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} - {option.description}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="description" className="form-label">
-            Description
-          </label>
-          <textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            className={`form-textarea ${errors.description ? 'error' : ''}`}
-            placeholder="Detailed description of the issue, steps to reproduce, expected behavior, etc."
-            rows={6}
-            maxLength={1000}
-          />
-          {errors.description && <span className="error-message">{errors.description}</span>}
-          <span className="char-count">{formData.description?.length || 0}/1000</span>
-        </div>
-
-        <div className="form-actions">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="btn btn-secondary"
-            disabled={createTicketMutation.isPending}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={createTicketMutation.isPending}
-          >
-            {createTicketMutation.isPending ? 'Creating...' : 'Create Ticket'}
-          </button>
-        </div>
-
-        {createTicketMutation.isError && (
-          <div className="error-banner">Failed to create ticket. Please try again.</div>
+        {apiError && (
+          <Alert icon={<IconAlertCircle size="1rem" />} color="red" title="Error">
+            {apiError}
+          </Alert>
         )}
-      </form>
-    </div>
+
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <TextInput
+              label="Title"
+              placeholder="Brief description of the issue or request"
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              error={errors.title}
+              maxLength={100}
+              required
+              rightSection={
+                <Text size="xs" c="dimmed">
+                  {formData.title.length}/100
+                </Text>
+              }
+            />
+
+            <Select
+              label="Ticket Type"
+              value={formData.type}
+              onChange={(value) => handleInputChange('type', value as TicketType)}
+              data={ticketTypeOptions}
+              required
+            />
+
+            <Select
+              label="Priority"
+              value={formData.priority}
+              onChange={(value) => handleInputChange('priority', value as Priority)}
+              data={priorityOptions.map((option) => ({
+                value: option.value,
+                label: `${option.label} - ${option.description}`,
+              }))}
+              required
+            />
+
+            <Textarea
+              label="Description"
+              placeholder="Detailed description of the issue, steps to reproduce, expected behavior, etc."
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              error={errors.description}
+              rows={6}
+              maxLength={1000}
+              rightSection={
+                <Text size="xs" c="dimmed">
+                  {formData.description?.length || 0}/1000
+                </Text>
+              }
+            />
+
+            <Group justify="flex-end" gap="sm">
+              {onCancel && (
+                <Button
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={createTicketMutation.isPending}
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                type="submit"
+                loading={createTicketMutation.isPending}
+                disabled={createTicketMutation.isPending}
+              >
+                {createTicketMutation.isPending ? 'Creating...' : 'Create Ticket'}
+              </Button>
+            </Group>
+
+            {createTicketMutation.isError && (
+              <Alert icon={<IconAlertCircle size="1rem" />} color="red">
+                Failed to create ticket. Please try again.
+              </Alert>
+            )}
+          </Stack>
+        </form>
+      </Stack>
+    </Card>
   )
 }

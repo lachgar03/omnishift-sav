@@ -1,15 +1,14 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Grid, 
-  Card, 
-  Group, 
-  Stack, 
-  Badge, 
+import {
+  Title,
+  Text,
+  Grid,
+  Card,
+  Group,
+  Stack,
+  Badge,
   Button,
   Alert,
   Skeleton,
@@ -17,18 +16,19 @@ import {
   Tooltip,
   Select,
   TextInput,
-  Pagination
+  Pagination,
 } from '@mantine/core'
-import { 
-  IconTicket, 
-  IconRefresh, 
+import {
+  IconTicket,
+  IconRefresh,
   IconSearch,
   IconPlus,
   IconCalendar,
   IconUser,
-  IconUsers
+  IconUsers,
 } from '@tabler/icons-react'
 import { ticketsApi } from '@/api'
+import { useAuthStore } from '@/store/authStore'
 import { getStatusColor, getPriorityColor } from '@/utils/statusUtils'
 import { formatDate } from '@/utils/formatDate'
 import { TicketStatus, Priority, Team } from '@/constants/roles'
@@ -36,8 +36,9 @@ import type { TicketResponse } from '@/types'
 
 export default function TicketsList() {
   const navigate = useNavigate()
+  const { isAdmin, isTechnician } = useAuthStore()
   const [page, setPage] = useState(0)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize] = useState(10)
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
@@ -45,15 +46,28 @@ export default function TicketsList() {
     searchTerm: '',
   })
 
+  // Use different API endpoints based on user role
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['tickets', page, pageSize, filters],
-    queryFn: () =>
-      ticketsApi.getAll({
-        page,
-        size: pageSize,
-        sortBy: 'createdAt',
-        sortDirection: 'desc',
-      }),
+    queryKey: ['tickets', page, pageSize, filters, isAdmin, isTechnician],
+    queryFn: async () => {
+      // Admin and Technicians can see all tickets
+      if (isAdmin || isTechnician) {
+        return ticketsApi.getAll({
+          page,
+          size: pageSize,
+          sortBy: 'createdAt',
+          sortDirection: 'desc',
+        })
+      } else {
+        // Regular users can only see their own tickets with pagination
+        return ticketsApi.getMyTicketsWithPagination({
+          page,
+          size: pageSize,
+          sortBy: 'createdAt',
+          sortDirection: 'desc',
+        })
+      }
+    },
   })
 
   const handleTicketClick = (ticket: TicketResponse) => {
@@ -64,19 +78,19 @@ export default function TicketsList() {
     setPage(newPage)
   }
 
-  const handlePageSizeChange = (newSize: number) => {
-    setPageSize(newSize)
-    setPage(0) // Reset to first page when changing page size
-  }
+  // const handlePageSizeChange = (newSize: number) => {
+  //   setPageSize(newSize)
+  //   setPage(0) // Reset to first page when changing page size
+  // }
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
+    setFilters((prev) => ({ ...prev, [key]: value }))
     setPage(0) // Reset to first page when filtering
   }
 
   const tickets = data?.content || []
   const totalPages = data?.totalPages || 0
-  const totalItems = data?.totalElements || 0
+  // const totalItems = data?.totalElements || 0
 
   // Filter tickets based on current filters
   const filteredTickets = tickets.filter((ticket) => {
@@ -93,48 +107,64 @@ export default function TicketsList() {
     return true
   })
 
+  const pageTitle = isAdmin || isTechnician ? 'All Tickets' : 'My Tickets'
+
   if (isLoading) {
     return (
-      <Container size="xl" py="md">
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '1rem'
+      }}>
         <Group justify="space-between" mb="lg">
           <Group gap="sm">
             <IconTicket size="2rem" />
-            <Title order={1}>All Tickets</Title>
+            <Title order={1}>{pageTitle}</Title>
           </Group>
         </Group>
         <Grid>
           {Array.from({ length: 6 }).map((_, i) => (
-            <Grid.Col key={i} span={{ base: 12, sm: 6, md: 4 }}>
+            <Grid.Col key={i} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
               <Skeleton height={200} />
             </Grid.Col>
           ))}
         </Grid>
-      </Container>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <Container size="xl" py="md">
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '1rem'
+      }}>
         <Group justify="space-between" mb="lg">
           <Group gap="sm">
             <IconTicket size="2rem" />
-            <Title order={1}>All Tickets</Title>
+            <Title order={1}>{pageTitle}</Title>
           </Group>
         </Group>
         <Alert color="red" title="Error loading tickets">
           Failed to load tickets. Please try again.
         </Alert>
-      </Container>
+      </div>
     )
   }
 
+  const showTeamFilter = isAdmin || isTechnician
+
   return (
-    <Container size="xl" py="md">
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      padding: '1rem'
+    }}>
       <Group justify="space-between" mb="lg">
         <Group gap="sm">
           <IconTicket size="2rem" />
-          <Title order={1}>All Tickets</Title>
+          <Title order={1}>{pageTitle}</Title>
         </Group>
         <Group gap="sm">
           <Tooltip label="Refresh tickets">
@@ -142,7 +172,10 @@ export default function TicketsList() {
               <IconRefresh size="1rem" />
             </ActionIcon>
           </Tooltip>
-          <Button leftSection={<IconPlus size="1rem" />}>
+          <Button
+            leftSection={<IconPlus size="1rem" />}
+            onClick={() => navigate({ to: '/tickets/create' })}
+          >
             Create Ticket
           </Button>
         </Group>
@@ -163,8 +196,8 @@ export default function TicketsList() {
                   { value: '', label: 'All Status' },
                   ...Object.values(TicketStatus).map((status) => ({
                     value: status,
-                    label: status.replace('_', ' ').toUpperCase()
-                  }))
+                    label: status.replace('_', ' ').toUpperCase(),
+                  })),
                 ]}
               />
             </Grid.Col>
@@ -178,26 +211,28 @@ export default function TicketsList() {
                   { value: '', label: 'All Priorities' },
                   ...Object.values(Priority).map((priority) => ({
                     value: priority,
-                    label: priority.replace('_', ' ').toUpperCase()
-                  }))
+                    label: priority.replace('_', ' ').toUpperCase(),
+                  })),
                 ]}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-              <Select
-                label="Team"
-                placeholder="All Teams"
-                value={filters.team}
-                onChange={(value) => handleFilterChange('team', value || '')}
-                data={[
-                  { value: '', label: 'All Teams' },
-                  ...Object.values(Team).map((team) => ({
-                    value: team,
-                    label: team.replace('_', ' ').toUpperCase()
-                  }))
-                ]}
-              />
-            </Grid.Col>
+            {showTeamFilter && (
+              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+                <Select
+                  label="Team"
+                  placeholder="All Teams"
+                  value={filters.team}
+                  onChange={(value) => handleFilterChange('team', value || '')}
+                  data={[
+                    { value: '', label: 'All Teams' },
+                    ...Object.values(Team).map((team) => ({
+                      value: team,
+                      label: team.replace('_', ' ').toUpperCase(),
+                    })),
+                  ]}
+                />
+              </Grid.Col>
+            )}
             <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
               <TextInput
                 label="Search"
@@ -214,16 +249,22 @@ export default function TicketsList() {
       {/* Tickets Grid */}
       {filteredTickets.length === 0 ? (
         <Alert color="blue" title="No tickets found" icon={<IconTicket size="1rem" />}>
-          {tickets.length === 0 
-            ? "No tickets have been created yet." 
-            : "No tickets match your current filters."}
+          {tickets.length === 0
+            ? isAdmin || isTechnician
+              ? 'No tickets have been created yet.'
+              : "You haven't created any tickets yet."
+            : 'No tickets match your current filters.'}
         </Alert>
       ) : (
         <>
           <Grid>
             {filteredTickets.map((ticket) => (
-              <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
-                <Card withBorder style={{ cursor: 'pointer' }} onClick={() => handleTicketClick(ticket)}>
+              <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card
+                  withBorder
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleTicketClick(ticket)}
+                >
                   <Stack gap="md">
                     <Group justify="space-between">
                       <Badge color={getStatusColor(ticket.status)} variant="light">
@@ -235,7 +276,9 @@ export default function TicketsList() {
                     </Group>
 
                     <div>
-                      <Title order={4} mb="xs">#{ticket.id} - {ticket.title}</Title>
+                      <Title order={4} mb="xs">
+                        #{ticket.id} - {ticket.title}
+                      </Title>
                       <Text size="sm" c="dimmed" lineClamp={3}>
                         {ticket.description}
                       </Text>
@@ -286,6 +329,6 @@ export default function TicketsList() {
           )}
         </>
       )}
-    </Container>
+    </div>
   )
 }

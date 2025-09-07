@@ -1,4 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
+import {
+  Container,
+  Title,
+  Text,
+  Grid,
+  Card,
+  Group,
+  Badge,
+  Stack,
+  Loader,
+  Alert,
+} from '@mantine/core'
 import { ticketsApi, usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { Priority, UserStatus } from '@/constants/roles'
@@ -41,21 +53,28 @@ export default function SystemStatistics() {
 
   if (isLoadingTickets || isLoadingUsers) {
     return (
-      <div className="system-statistics">
-        <h1>System Statistics</h1>
-        <div>Loading statistics...</div>
-      </div>
+      <Container size="xl" py="md">
+        <Title order={1} mb="xl">
+          System Statistics
+        </Title>
+        <Group justify="center" mt="xl">
+          <Loader size="lg" />
+          <Text>Loading statistics...</Text>
+        </Group>
+      </Container>
     )
   }
 
   if (ticketError || userError) {
     return (
-      <div className="system-statistics">
-        <h1>System Statistics</h1>
-        <div className="error-message" style={{ color: 'red', padding: '10px' }}>
+      <Container size="xl" py="md">
+        <Title order={1} mb="xl">
+          System Statistics
+        </Title>
+        <Alert color="red" title="Error">
           Error loading statistics: {getErrorMessage(ticketError || userError)}
-        </div>
-      </div>
+        </Alert>
+      </Container>
     )
   }
 
@@ -74,226 +93,184 @@ export default function SystemStatistics() {
   }
 
   return (
-    <div className="system-statistics">
-      <h1>System Statistics</h1>
+    <Container size="xl" py="md">
+      <Title order={1} mb="xl">
+        System Statistics
+      </Title>
 
-      <div
-        className="statistics-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-          gap: '20px',
-          marginTop: '20px',
-        }}
-      >
+      <Grid>
         {/* Ticket Overview */}
-        <div
-          className="stats-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f8f9fa',
-          }}
-        >
-          <h3>Ticket Overview</h3>
-          {ticketStats && (
-            <div
-              className="stats-grid"
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}
-            >
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#007bff' }}>
-                  {ticketStats.totalTickets}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Total Tickets</div>
-              </div>
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745' }}>
-                  {ticketStats.closedTickets}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Resolved</div>
-              </div>
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffc107' }}>
-                  {ticketStats.inProgressTickets}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>In Progress</div>
-              </div>
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc3545' }}>
-                  {ticketStats.openTickets}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Open</div>
-              </div>
-            </div>
-          )}
-          <div
-            style={{
-              marginTop: '15px',
-              padding: '10px',
-              backgroundColor: '#e7f3ff',
-              borderRadius: '4px',
-            }}
-          >
-            <strong>Resolution Rate: {calculateTicketResolutionRate()}%</strong>
-          </div>
-        </div>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card withBorder>
+            <Stack gap="md">
+              <Title order={3}>Ticket Overview</Title>
+              {ticketStats && (
+                <Grid>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>Total Tickets</Text>
+                      <Badge color="blue" size="lg">
+                        {ticketStats.totalTickets}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>Resolved</Text>
+                      <Badge color="green" size="lg">
+                        {ticketStats.closedTickets}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>In Progress</Text>
+                      <Badge color="yellow" size="lg">
+                        {ticketStats.inProgressTickets}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>Open</Text>
+                      <Badge color="red" size="lg">
+                        {ticketStats.openTickets}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                </Grid>
+              )}
+              <Alert color="blue" variant="light">
+                <Text fw={500}>Resolution Rate: {calculateTicketResolutionRate()}%</Text>
+              </Alert>
+            </Stack>
+          </Card>
+        </Grid.Col>
 
         {/* User Overview */}
-        <div
-          className="stats-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f8f9fa',
-          }}
-        >
-          <h3>User Overview</h3>
-          {userStats && (
-            <div
-              className="stats-grid"
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}
-            >
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#007bff' }}>
-                  {userStats.totalUsers}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Total Users</div>
-              </div>
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#28a745' }}>
-                  {userStats.activeUsers}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Active</div>
-              </div>
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#17a2b8' }}>
-                  {userStats.technicians}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Technicians</div>
-              </div>
-              <div className="stat-item">
-                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#6c757d' }}>
-                  {userStats.admins}
-                </div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Admins</div>
-              </div>
-            </div>
-          )}
-          <div
-            style={{
-              marginTop: '15px',
-              padding: '10px',
-              backgroundColor: '#e7f3ff',
-              borderRadius: '4px',
-            }}
-          >
-            <strong>Activity Rate: {calculateUserActivityRate()}%</strong>
-          </div>
-        </div>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card withBorder>
+            <Stack gap="md">
+              <Title order={3}>User Overview</Title>
+              {userStats && (
+                <Grid>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>Total Users</Text>
+                      <Badge color="blue" size="lg">
+                        {userStats.totalUsers}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>Active</Text>
+                      <Badge color="green" size="lg">
+                        {userStats.activeUsers}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>Technicians</Text>
+                      <Badge color="cyan" size="lg">
+                        {userStats.technicians}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                  <Grid.Col span={6}>
+                    <Group justify="space-between">
+                      <Text>Admins</Text>
+                      <Badge color="gray" size="lg">
+                        {userStats.admins}
+                      </Badge>
+                    </Group>
+                  </Grid.Col>
+                </Grid>
+              )}
+              <Alert color="blue" variant="light">
+                <Text fw={500}>Activity Rate: {calculateUserActivityRate()}%</Text>
+              </Alert>
+            </Stack>
+          </Card>
+        </Grid.Col>
 
         {/* Priority Breakdown */}
-        <div
-          className="stats-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f8f9fa',
-          }}
-        >
-          <h3>High Priority Tickets</h3>
-          <div className="priority-stats">
-            <div className="stat-item" style={{ marginBottom: '15px' }}>
-              <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Critical Priority</span>
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                  {criticalTickets?.length || 0}
-                </span>
-              </div>
-            </div>
-            <div className="stat-item" style={{ marginBottom: '15px' }}>
-              <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <span style={{ color: '#fd7e14', fontWeight: 'bold' }}>High Priority</span>
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                  {highPriorityTickets?.length || 0}
-                </span>
-              </div>
-            </div>
-            <div className="stat-item">
-              <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              >
-                <span style={{ color: '#ffc107', fontWeight: 'bold' }}>Assigned Tickets</span>
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                  {ticketStats?.assignedTickets || 0}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card withBorder>
+            <Stack gap="md">
+              <Title order={3}>High Priority Tickets</Title>
+              <Stack gap="sm">
+                <Group justify="space-between">
+                  <Text c="red" fw={500}>
+                    Critical Priority
+                  </Text>
+                  <Badge color="red" size="lg">
+                    {criticalTickets?.length || 0}
+                  </Badge>
+                </Group>
+                <Group justify="space-between">
+                  <Text c="orange" fw={500}>
+                    High Priority
+                  </Text>
+                  <Badge color="orange" size="lg">
+                    {highPriorityTickets?.length || 0}
+                  </Badge>
+                </Group>
+                <Group justify="space-between">
+                  <Text c="yellow" fw={500}>
+                    Assigned Tickets
+                  </Text>
+                  <Badge color="yellow" size="lg">
+                    {ticketStats?.assignedTickets || 0}
+                  </Badge>
+                </Group>
+              </Stack>
+            </Stack>
+          </Card>
+        </Grid.Col>
 
         {/* System Health */}
-        <div
-          className="stats-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f8f9fa',
-          }}
-        >
-          <h3>System Health</h3>
-          <div className="health-indicators">
-            <div
-              className="health-item"
-              style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}
-            >
-              <span style={{ color: '#28a745', fontSize: '20px', marginRight: '10px' }}>●</span>
-              <div>
-                <div style={{ fontWeight: 'bold' }}>Backend Service</div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Operational</div>
-              </div>
-            </div>
-            <div
-              className="health-item"
-              style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}
-            >
-              <span style={{ color: '#28a745', fontSize: '20px', marginRight: '10px' }}>●</span>
-              <div>
-                <div style={{ fontWeight: 'bold' }}>Authentication</div>
-                <div style={{ fontSize: '14px', color: '#666' }}>Active</div>
-              </div>
-            </div>
-            <div
-              className="health-item"
-              style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}
-            >
-              <span
-                style={{
-                  color: pendingUsers && pendingUsers.length > 0 ? '#ffc107' : '#28a745',
-                  fontSize: '20px',
-                  marginRight: '10px',
-                }}
-              >
-                ●
-              </span>
-              <div>
-                <div style={{ fontWeight: 'bold' }}>Pending Users</div>
-                <div style={{ fontSize: '14px', color: '#666' }}>
-                  {pendingUsers?.length || 0} awaiting activation
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card withBorder>
+            <Stack gap="md">
+              <Title order={3}>System Health</Title>
+              <Stack gap="sm">
+                <Group>
+                  <Badge color="green" variant="dot" />
+                  <div>
+                    <Text fw={500}>Backend Service</Text>
+                    <Text size="sm" c="dimmed">
+                      Operational
+                    </Text>
+                  </div>
+                </Group>
+                <Group>
+                  <Badge color="green" variant="dot" />
+                  <div>
+                    <Text fw={500}>Authentication</Text>
+                    <Text size="sm" c="dimmed">
+                      Active
+                    </Text>
+                  </div>
+                </Group>
+                <Group>
+                  <Badge
+                    color={pendingUsers && pendingUsers.length > 0 ? 'yellow' : 'green'}
+                    variant="dot"
+                  />
+                  <div>
+                    <Text fw={500}>Pending Users</Text>
+                    <Text size="sm" c="dimmed">
+                      {pendingUsers?.length || 0} awaiting activation
+                    </Text>
+                  </div>
+                </Group>
+              </Stack>
+            </Stack>
+          </Card>
+        </Grid.Col>
+      </Grid>
+    </Container>
   )
 }

@@ -1,30 +1,29 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Grid, 
-  Card, 
-  Group, 
-  Stack, 
-  Badge, 
-  Button,
+import {
+  Container,
+  Title,
+  Text,
+  Grid,
+  Card,
+  Group,
+  Stack,
+  Badge,
   Alert,
   Skeleton,
   ActionIcon,
   Tooltip,
   Select,
-  TextInput
+  TextInput,
 } from '@mantine/core'
-import { 
-  IconTicket, 
-  IconRefresh, 
+import {
+  IconTicket,
+  IconRefresh,
   IconSearch,
   IconCalendar,
   IconUser,
-  IconUsers
+  IconUsers,
 } from '@tabler/icons-react'
 import { ticketsApi } from '@/api'
 import { getStatusColor, getPriorityColor } from '@/utils/statusUtils'
@@ -41,7 +40,12 @@ export default function MyTicketsList() {
     searchTerm: '',
   })
 
-  const { data: tickets, isLoading, error, refetch } = useQuery({
+  const {
+    data: tickets,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['myTickets', filters],
     queryFn: () => ticketsApi.getMyTickets(),
   })
@@ -51,7 +55,7 @@ export default function MyTicketsList() {
   }
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
+    setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
   const ticketList = tickets || []
@@ -136,8 +140,8 @@ export default function MyTicketsList() {
                   { value: '', label: 'All Status' },
                   ...Object.values(TicketStatus).map((status) => ({
                     value: status,
-                    label: status.replace('_', ' ').toUpperCase()
-                  }))
+                    label: status.replace('_', ' ').toUpperCase(),
+                  })),
                 ]}
               />
             </Grid.Col>
@@ -151,8 +155,8 @@ export default function MyTicketsList() {
                   { value: '', label: 'All Priorities' },
                   ...Object.values(Priority).map((priority) => ({
                     value: priority,
-                    label: priority.replace('_', ' ').toUpperCase()
-                  }))
+                    label: priority.replace('_', ' ').toUpperCase(),
+                  })),
                 ]}
               />
             </Grid.Col>
@@ -166,8 +170,8 @@ export default function MyTicketsList() {
                   { value: '', label: 'All Teams' },
                   ...Object.values(Team).map((team) => ({
                     value: team,
-                    label: team.replace('_', ' ').toUpperCase()
-                  }))
+                    label: team.replace('_', ' ').toUpperCase(),
+                  })),
                 ]}
               />
             </Grid.Col>
@@ -187,15 +191,19 @@ export default function MyTicketsList() {
       {/* Tickets Grid */}
       {filteredTickets.length === 0 ? (
         <Alert color="blue" title="No tickets found" icon={<IconTicket size="1rem" />}>
-          {ticketList.length === 0 
-            ? "You haven't created any tickets yet." 
-            : "No tickets match your current filters."}
+          {ticketList.length === 0
+            ? "You haven't created any tickets yet."
+            : 'No tickets match your current filters.'}
         </Alert>
       ) : (
         <Grid>
           {filteredTickets.map((ticket) => (
             <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
-              <Card withBorder style={{ cursor: 'pointer' }} onClick={() => handleTicketClick(ticket)}>
+              <Card
+                withBorder
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleTicketClick(ticket)}
+              >
                 <Stack gap="md">
                   <Group justify="space-between">
                     <Badge color={getStatusColor(ticket.status)} variant="light">
@@ -207,7 +215,9 @@ export default function MyTicketsList() {
                   </Group>
 
                   <div>
-                    <Title order={4} mb="xs">#{ticket.id} - {ticket.title}</Title>
+                    <Title order={4} mb="xs">
+                      #{ticket.id} - {ticket.title}
+                    </Title>
                     <Text size="sm" c="dimmed" lineClamp={3}>
                       {ticket.description}
                     </Text>

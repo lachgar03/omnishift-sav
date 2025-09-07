@@ -1,27 +1,22 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Grid, 
-  Card, 
-  Group, 
-  Stack, 
-  Badge, 
+import {
+  Container,
+  Title,
+  Text,
+  Grid,
+  Card,
+  Group,
+  Stack,
+  Badge,
   Button,
   Alert,
   Skeleton,
   ActionIcon,
   Tooltip,
-  Select
+  Select,
 } from '@mantine/core'
-import { 
-  IconTicket, 
-  IconRefresh, 
-  IconCalendar,
-  IconAlertTriangle
-} from '@tabler/icons-react'
+import { IconTicket, IconRefresh, IconCalendar, IconAlertTriangle } from '@tabler/icons-react'
 import { ticketsApi, usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
@@ -116,16 +111,19 @@ export default function UnassignedTickets() {
   }
 
   // Filter for truly unassigned tickets
-  const unassignedTickets = Array.isArray(tickets) ? tickets.filter(
-    (ticket: TicketResponse) => !ticket.assignedUserId && !ticket.assignedTeam,
-  ) : []
+  const unassignedTickets = Array.isArray(tickets)
+    ? tickets.filter((ticket: TicketResponse) => !ticket.assignedUserId && !ticket.assignedTeam)
+    : []
 
   const priorityOrder = { CRITICAL: 1, HIGH: 2, MEDIUM: 3, LOW: 4 }
-  const sortedTickets = unassignedTickets?.sort((a: TicketResponse, b: TicketResponse) => {
-    const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 5) - (priorityOrder[b.priority as keyof typeof priorityOrder] || 5)
-    if (priorityDiff !== 0) return priorityDiff
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  }) || []
+  const sortedTickets =
+    unassignedTickets?.sort((a: TicketResponse, b: TicketResponse) => {
+      const priorityDiff =
+        (priorityOrder[a.priority as keyof typeof priorityOrder] || 5) -
+        (priorityOrder[b.priority as keyof typeof priorityOrder] || 5)
+      if (priorityDiff !== 0) return priorityDiff
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    }) || []
 
   return (
     <Container size="xl" py="md">
@@ -135,7 +133,10 @@ export default function UnassignedTickets() {
           <Title order={1}>Unassigned Tickets</Title>
         </Group>
         <Tooltip label="Refresh tickets">
-          <ActionIcon variant="subtle" onClick={() => queryClient.invalidateQueries({ queryKey: ['tickets'] })}>
+          <ActionIcon
+            variant="subtle"
+            onClick={() => queryClient.invalidateQueries({ queryKey: ['tickets'] })}
+          >
             <IconRefresh size="1rem" />
           </ActionIcon>
         </Tooltip>
@@ -148,7 +149,12 @@ export default function UnassignedTickets() {
       )}
 
       {sortedTickets && sortedTickets.length > 0 && (
-        <Alert color="yellow" title="Unassigned Tickets" mb="md" icon={<IconAlertTriangle size="1rem" />}>
+        <Alert
+          color="yellow"
+          title="Unassigned Tickets"
+          mb="md"
+          icon={<IconAlertTriangle size="1rem" />}
+        >
           <strong>{sortedTickets.length}</strong> unassigned ticket
           {sortedTickets.length !== 1 ? 's' : ''} requiring attention
         </Alert>
@@ -157,7 +163,10 @@ export default function UnassignedTickets() {
       <Grid>
         {sortedTickets?.map((ticket: TicketResponse) => (
           <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
-            <Card withBorder style={{ borderLeft: `4px solid ${getPriorityColor(ticket.priority)}` }}>
+            <Card
+              withBorder
+              style={{ borderLeft: `4px solid ${getPriorityColor(ticket.priority)}` }}
+            >
               <Stack gap="md">
                 <Group justify="space-between">
                   <div>
@@ -189,12 +198,16 @@ export default function UnassignedTickets() {
 
                 <Stack gap="xs">
                   <Group gap="xs">
-                    <Text fw={500} size="sm">Type:</Text>
+                    <Text fw={500} size="sm">
+                      Type:
+                    </Text>
                     <Text size="sm">{ticket.type}</Text>
                   </Group>
 
                   <div>
-                    <Text fw={500} size="sm" mb="xs">Description:</Text>
+                    <Text fw={500} size="sm" mb="xs">
+                      Description:
+                    </Text>
                     <Text
                       size="sm"
                       c="dimmed"
@@ -215,7 +228,9 @@ export default function UnassignedTickets() {
 
                   {/* Team Assignment */}
                   <Stack gap="xs">
-                    <Text fw={500} size="sm">Assign to Team:</Text>
+                    <Text fw={500} size="sm">
+                      Assign to Team:
+                    </Text>
                     <Group gap="xs">
                       <Button
                         size="xs"
@@ -238,13 +253,17 @@ export default function UnassignedTickets() {
 
                   {/* User Assignment */}
                   <Stack gap="xs">
-                    <Text fw={500} size="sm">Assign to Technician:</Text>
+                    <Text fw={500} size="sm">
+                      Assign to Technician:
+                    </Text>
                     <Select
                       placeholder="Select a technician..."
-                      data={technicians?.map((tech: UserResponse) => ({
-                        value: tech.id,
-                        label: tech.fullName || `${tech.firstName} ${tech.lastName}`,
-                      })) || []}
+                      data={
+                        technicians?.map((tech: UserResponse) => ({
+                          value: tech.id,
+                          label: tech.fullName || `${tech.firstName} ${tech.lastName}`,
+                        })) || []
+                      }
                       onChange={(value) => {
                         if (value) {
                           handleUserAssignment(ticket.id, value)

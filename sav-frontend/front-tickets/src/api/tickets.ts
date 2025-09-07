@@ -33,6 +33,13 @@ export const ticketsApi = {
     return data
   },
 
+  getMyTicketsWithPagination: async (
+    params: TicketFilterRequest,
+  ): Promise<PageResponse<TicketResponse>> => {
+    const { data } = await axiosInstance.get(API_ENDPOINTS.TICKETS_MY, { params })
+    return data
+  },
+
   getAssignedToMe: async (): Promise<TicketResponse[]> => {
     const { data } = await axiosInstance.get(API_ENDPOINTS.TICKETS_ASSIGNED)
     return data

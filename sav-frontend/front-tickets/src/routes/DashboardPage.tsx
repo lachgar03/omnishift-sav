@@ -1,30 +1,30 @@
 import { useQuery } from '@tanstack/react-query'
-import { 
-  Container, 
-  Title, 
-  Text, 
-  Grid, 
-  Card, 
-  Group, 
-  Stack, 
-  Badge, 
-  ThemeIcon, 
-  Progress, 
+import { useNavigate } from '@tanstack/react-router'
+import {
+  Title,
+  Text,
+  Grid,
+  Card,
+  Group,
+  Stack,
+  Badge,
+  ThemeIcon,
   Skeleton,
   Alert,
   Button,
   ActionIcon,
-  Tooltip
+  Tooltip,
 } from '@mantine/core'
-import { 
-  IconTicket, 
-  IconUsers, 
-  IconChartBar, 
-  IconClock, 
-  IconCheck, 
+import {
+  IconTicket,
+  IconUsers,
+  IconChartBar,
+  IconClock,
+  IconCheck,
   IconAlertTriangle,
   IconRefresh,
-  IconTrendingUp
+  IconTrendingUp,
+  IconPlus,
 } from '@tabler/icons-react'
 import { useAuthStore } from '@store/authStore'
 import { ticketsApi, usersApi } from '@/api'
@@ -33,9 +33,14 @@ import { getStatusColor, getPriorityColor } from '@/utils/statusUtils'
 
 export default function DashboardPage() {
   const authStore = useAuthStore()
+  const navigate = useNavigate()
 
   // Fetch dashboard data
-  const { data: dashboardData, isLoading: dashboardLoading, refetch: refetchDashboard } = useQuery<DashboardResponse>({
+  const {
+    data: dashboardData,
+    isLoading: dashboardLoading,
+    refetch: refetchDashboard,
+  } = useQuery<DashboardResponse>({
     queryKey: ['dashboard'],
     queryFn: ticketsApi.getDashboard,
   })
@@ -66,16 +71,22 @@ export default function DashboardPage() {
 
   if (dashboardLoading) {
     return (
-      <Container size="xl" py="md">
-        <Skeleton height={40} mb="md" />
-        <Grid>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Grid.Col key={i} span={{ base: 12, sm: 6, md: 4 }}>
-              <Skeleton height={120} />
-            </Grid.Col>
-          ))}
-        </Grid>
-      </Container>
+      <div style={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '1rem'
+      }}>
+        <Stack gap="lg" style={{ maxWidth: '100%', width: '100%' }}>
+          <Skeleton height={40} />
+          <Grid>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Grid.Col key={i} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Skeleton height={120} />
+              </Grid.Col>
+            ))}
+          </Grid>
+        </Stack>
+      </div>
     )
   }
 
@@ -83,20 +94,32 @@ export default function DashboardPage() {
     <Stack gap="lg">
       <Group justify="space-between">
         <Title order={2}>My Dashboard</Title>
-        <Tooltip label="Refresh data">
-          <ActionIcon variant="subtle" onClick={handleRefresh}>
-            <IconRefresh size="1rem" />
-          </ActionIcon>
-        </Tooltip>
+        <Group gap="sm">
+          <Button
+            leftSection={<IconPlus size="1rem" />}
+            onClick={() => navigate({ to: '/tickets/create' })}
+          >
+            Create Ticket
+          </Button>
+          <Tooltip label="Refresh data">
+            <ActionIcon variant="subtle" onClick={handleRefresh}>
+              <IconRefresh size="1rem" />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
       </Group>
-      
+
       <Grid>
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Card withBorder>
+        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+          <Card withBorder shadow="sm" style={{ height: '100%' }}>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">My Tickets</Text>
-                <Text size="xl" fw={700}>{dashboardData?.myTicketsCount || 0}</Text>
+                <Text size="sm" c="dimmed">
+                  My Tickets
+                </Text>
+                <Text size="xl" fw={700}>
+                  {dashboardData?.myTicketsCount || 0}
+                </Text>
               </div>
               <ThemeIcon size="lg" variant="light" color="blue">
                 <IconTicket size="1.5rem" />
@@ -104,13 +127,17 @@ export default function DashboardPage() {
             </Group>
           </Card>
         </Grid.Col>
-        
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Card withBorder>
+
+        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+          <Card withBorder shadow="sm" style={{ height: '100%' }}>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">Open Tickets</Text>
-                <Text size="xl" fw={700}>{dashboardData?.myOpenTickets || 0}</Text>
+                <Text size="sm" c="dimmed">
+                  Open Tickets
+                </Text>
+                <Text size="xl" fw={700}>
+                  {dashboardData?.myOpenTickets || 0}
+                </Text>
               </div>
               <ThemeIcon size="lg" variant="light" color="orange">
                 <IconClock size="1.5rem" />
@@ -118,13 +145,17 @@ export default function DashboardPage() {
             </Group>
           </Card>
         </Grid.Col>
-        
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Card withBorder>
+
+        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+          <Card withBorder shadow="sm" style={{ height: '100%' }}>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">In Progress</Text>
-                <Text size="xl" fw={700}>{dashboardData?.myInProgressTickets || 0}</Text>
+                <Text size="sm" c="dimmed">
+                  In Progress
+                </Text>
+                <Text size="xl" fw={700}>
+                  {dashboardData?.myInProgressTickets || 0}
+                </Text>
               </div>
               <ThemeIcon size="lg" variant="light" color="yellow">
                 <IconTrendingUp size="1.5rem" />
@@ -174,14 +205,18 @@ export default function DashboardPage() {
           </ActionIcon>
         </Tooltip>
       </Group>
-      
+
       <Grid>
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Card withBorder>
+        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+          <Card withBorder shadow="sm" style={{ height: '100%' }}>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">Assigned to Me</Text>
-                <Text size="xl" fw={700}>{dashboardData?.assignedToMeCount || 0}</Text>
+                <Text size="sm" c="dimmed">
+                  Assigned to Me
+                </Text>
+                <Text size="xl" fw={700}>
+                  {dashboardData?.assignedToMeCount || 0}
+                </Text>
               </div>
               <ThemeIcon size="lg" variant="light" color="blue">
                 <IconTicket size="1.5rem" />
@@ -189,13 +224,17 @@ export default function DashboardPage() {
             </Group>
           </Card>
         </Grid.Col>
-        
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Card withBorder>
+
+        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+          <Card withBorder shadow="sm" style={{ height: '100%' }}>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">My Tickets</Text>
-                <Text size="xl" fw={700}>{dashboardData?.myTicketsCount || 0}</Text>
+                <Text size="sm" c="dimmed">
+                  My Tickets
+                </Text>
+                <Text size="xl" fw={700}>
+                  {dashboardData?.myTicketsCount || 0}
+                </Text>
               </div>
               <ThemeIcon size="lg" variant="light" color="green">
                 <IconCheck size="1.5rem" />
@@ -203,13 +242,17 @@ export default function DashboardPage() {
             </Group>
           </Card>
         </Grid.Col>
-        
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <Card withBorder>
+
+        <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+          <Card withBorder shadow="sm" style={{ height: '100%' }}>
             <Group justify="space-between">
               <div>
-                <Text size="sm" c="dimmed">Open Tickets</Text>
-                <Text size="xl" fw={700}>{dashboardData?.myOpenTickets || 0}</Text>
+                <Text size="sm" c="dimmed">
+                  Open Tickets
+                </Text>
+                <Text size="xl" fw={700}>
+                  {dashboardData?.myOpenTickets || 0}
+                </Text>
               </div>
               <ThemeIcon size="lg" variant="light" color="orange">
                 <IconClock size="1.5rem" />
@@ -224,12 +267,16 @@ export default function DashboardPage() {
           <Stack gap="md">
             <Title order={3}>System Overview</Title>
             <Grid>
-              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                <Card withBorder p="md">
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Total Tickets</Text>
-                      <Text size="lg" fw={700}>{ticketStats.totalTickets}</Text>
+                      <Text size="sm" c="dimmed">
+                        Total Tickets
+                      </Text>
+                      <Text size="lg" fw={700}>
+                        {ticketStats.totalTickets}
+                      </Text>
                     </div>
                     <ThemeIcon size="md" variant="light" color="blue">
                       <IconChartBar size="1rem" />
@@ -237,13 +284,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Assigned Tickets</Text>
-                      <Text size="lg" fw={700}>{ticketStats.assignedTickets}</Text>
+                      <Text size="sm" c="dimmed">
+                        Assigned Tickets
+                      </Text>
+                      <Text size="lg" fw={700}>
+                        {ticketStats.assignedTickets}
+                      </Text>
                     </div>
                     <ThemeIcon size="md" variant="light" color="green">
                       <IconUsers size="1rem" />
@@ -251,13 +302,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Closed Tickets</Text>
-                      <Text size="lg" fw={700}>{ticketStats.closedTickets}</Text>
+                      <Text size="sm" c="dimmed">
+                        Closed Tickets
+                      </Text>
+                      <Text size="lg" fw={700}>
+                        {ticketStats.closedTickets}
+                      </Text>
                     </div>
                     <ThemeIcon size="md" variant="light" color="teal">
                       <IconCheck size="1rem" />
@@ -321,12 +376,16 @@ export default function DashboardPage() {
           <Stack gap="md">
             <Title order={3}>User Statistics</Title>
             <Grid>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Total Users</Text>
-                      <Text size="xl" fw={700}>{userStats.totalUsers}</Text>
+                      <Text size="sm" c="dimmed">
+                        Total Users
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {userStats.totalUsers}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="blue">
                       <IconUsers size="1.5rem" />
@@ -334,13 +393,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Active Users</Text>
-                      <Text size="xl" fw={700}>{userStats.activeUsers}</Text>
+                      <Text size="sm" c="dimmed">
+                        Active Users
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {userStats.activeUsers}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="green">
                       <IconCheck size="1.5rem" />
@@ -348,13 +411,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Technicians</Text>
-                      <Text size="xl" fw={700}>{userStats.technicians}</Text>
+                      <Text size="sm" c="dimmed">
+                        Technicians
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {userStats.technicians}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="orange">
                       <IconTicket size="1.5rem" />
@@ -362,13 +429,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Admins</Text>
-                      <Text size="xl" fw={700}>{userStats.admins}</Text>
+                      <Text size="sm" c="dimmed">
+                        Admins
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {userStats.admins}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="red">
                       <IconChartBar size="1.5rem" />
@@ -386,12 +457,16 @@ export default function DashboardPage() {
           <Stack gap="md">
             <Title order={3}>Ticket Statistics</Title>
             <Grid>
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Total Tickets</Text>
-                      <Text size="xl" fw={700}>{ticketStats.totalTickets}</Text>
+                      <Text size="sm" c="dimmed">
+                        Total Tickets
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {ticketStats.totalTickets}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="blue">
                       <IconChartBar size="1.5rem" />
@@ -399,13 +474,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Open Tickets</Text>
-                      <Text size="xl" fw={700}>{ticketStats.openTickets}</Text>
+                      <Text size="sm" c="dimmed">
+                        Open Tickets
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {ticketStats.openTickets}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="orange">
                       <IconClock size="1.5rem" />
@@ -413,13 +492,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">In Progress</Text>
-                      <Text size="xl" fw={700}>{ticketStats.inProgressTickets}</Text>
+                      <Text size="sm" c="dimmed">
+                        In Progress
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {ticketStats.inProgressTickets}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="yellow">
                       <IconTrendingUp size="1.5rem" />
@@ -427,13 +510,17 @@ export default function DashboardPage() {
                   </Group>
                 </Card>
               </Grid.Col>
-              
-              <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-                <Card withBorder p="md">
+
+              <Grid.Col span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                <Card withBorder p="md" shadow="sm" style={{ height: '100%' }}>
                   <Group justify="space-between">
                     <div>
-                      <Text size="sm" c="dimmed">Closed Tickets</Text>
-                      <Text size="xl" fw={700}>{ticketStats.closedTickets}</Text>
+                      <Text size="sm" c="dimmed">
+                        Closed Tickets
+                      </Text>
+                      <Text size="xl" fw={700}>
+                        {ticketStats.closedTickets}
+                      </Text>
                     </div>
                     <ThemeIcon size="lg" variant="light" color="teal">
                       <IconCheck size="1.5rem" />
@@ -492,17 +579,21 @@ export default function DashboardPage() {
   }
 
   return (
-    <Container size="xl" py="md">
-      <Stack gap="lg">
-        <Group justify="space-between">
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      padding: '1rem'
+    }}>
+      <Stack gap="lg" style={{ maxWidth: '100%', width: '100%' }}>
+        <Group justify="space-between" wrap="wrap">
           <div>
-            <Title order={1}>Welcome to SAV System</Title>
+            <Title order={1} c="dark">Welcome to SAV System</Title>
             <Text c="dimmed" size="lg">
               Support ticket management dashboard
             </Text>
           </div>
           <Group gap="sm">
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" fw={500}>
               {authStore.isAdmin ? 'Administrator' : authStore.isTechnician ? 'Technician' : 'User'}
             </Text>
           </Group>
@@ -510,6 +601,6 @@ export default function DashboardPage() {
 
         {renderDashboard()}
       </Stack>
-    </Container>
+    </div>
   )
 }

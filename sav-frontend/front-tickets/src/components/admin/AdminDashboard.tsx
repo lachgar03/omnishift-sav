@@ -1,5 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
-import { Container, Title, Grid, Card, Text, Group, Badge, Button, Stack, Loader, Alert } from '@mantine/core'
+import {
+  Container,
+  Title,
+  Grid,
+  Card,
+  Text,
+  Group,
+  Badge,
+  Button,
+  Stack,
+  Loader,
+  Alert,
+} from '@mantine/core'
 import { ticketsApi, usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import type { TicketStatsResponse, UserStatsResponse } from '@/types'
@@ -26,7 +38,9 @@ export default function AdminDashboard() {
   if (isLoadingTickets || isLoadingUsers) {
     return (
       <Container size="xl" py="md">
-        <Title order={1} mb="xl">Admin Dashboard</Title>
+        <Title order={1} mb="xl">
+          Admin Dashboard
+        </Title>
         <Group justify="center" mt="xl">
           <Loader size="lg" />
           <Text>Loading dashboard data...</Text>
@@ -38,7 +52,9 @@ export default function AdminDashboard() {
   if (ticketError || userError) {
     return (
       <Container size="xl" py="md">
-        <Title order={1} mb="xl">Admin Dashboard</Title>
+        <Title order={1} mb="xl">
+          Admin Dashboard
+        </Title>
         <Alert color="red" title="Error">
           Error loading dashboard: {getErrorMessage(ticketError || userError)}
         </Alert>
@@ -48,7 +64,9 @@ export default function AdminDashboard() {
 
   return (
     <Container size="xl" py="md">
-      <Title order={1} mb="xl">Admin Dashboard</Title>
+      <Title order={1} mb="xl">
+        Admin Dashboard
+      </Title>
 
       <Grid>
         {/* Ticket Statistics */}
@@ -62,23 +80,33 @@ export default function AdminDashboard() {
               <Stack gap="sm">
                 <Group justify="space-between">
                   <Text>Total Tickets</Text>
-                  <Badge color="blue" size="lg">{ticketStats.totalTickets}</Badge>
+                  <Badge color="blue" size="lg">
+                    {ticketStats.totalTickets}
+                  </Badge>
                 </Group>
                 <Group justify="space-between">
                   <Text>Open Tickets</Text>
-                  <Badge color="yellow" size="lg">{ticketStats.openTickets}</Badge>
+                  <Badge color="yellow" size="lg">
+                    {ticketStats.openTickets}
+                  </Badge>
                 </Group>
                 <Group justify="space-between">
                   <Text>In Progress</Text>
-                  <Badge color="orange" size="lg">{ticketStats.inProgressTickets}</Badge>
+                  <Badge color="orange" size="lg">
+                    {ticketStats.inProgressTickets}
+                  </Badge>
                 </Group>
                 <Group justify="space-between">
                   <Text>Assigned</Text>
-                  <Badge color="cyan" size="lg">{ticketStats.assignedTickets}</Badge>
+                  <Badge color="cyan" size="lg">
+                    {ticketStats.assignedTickets}
+                  </Badge>
                 </Group>
                 <Group justify="space-between">
                   <Text>Closed</Text>
-                  <Badge color="green" size="lg">{ticketStats.closedTickets}</Badge>
+                  <Badge color="green" size="lg">
+                    {ticketStats.closedTickets}
+                  </Badge>
                 </Group>
               </Stack>
             )}
@@ -96,19 +124,27 @@ export default function AdminDashboard() {
               <Stack gap="sm">
                 <Group justify="space-between">
                   <Text>Total Users</Text>
-                  <Badge color="blue" size="lg">{userStats.totalUsers}</Badge>
+                  <Badge color="blue" size="lg">
+                    {userStats.totalUsers}
+                  </Badge>
                 </Group>
                 <Group justify="space-between">
                   <Text>Active Users</Text>
-                  <Badge color="green" size="lg">{userStats.activeUsers}</Badge>
+                  <Badge color="green" size="lg">
+                    {userStats.activeUsers}
+                  </Badge>
                 </Group>
                 <Group justify="space-between">
                   <Text>Technicians</Text>
-                  <Badge color="purple" size="lg">{userStats.technicians}</Badge>
+                  <Badge color="purple" size="lg">
+                    {userStats.technicians}
+                  </Badge>
                 </Group>
                 <Group justify="space-between">
                   <Text>Admins</Text>
-                  <Badge color="red" size="lg">{userStats.admins}</Badge>
+                  <Badge color="red" size="lg">
+                    {userStats.admins}
+                  </Badge>
                 </Group>
               </Stack>
             )}
@@ -123,21 +159,18 @@ export default function AdminDashboard() {
               <Title order={3}>Quick Actions</Title>
             </Group>
             <Stack gap="sm">
-              <Button 
-                fullWidth 
-                onClick={() => (window.location.href = '/admin/users')}
-              >
+              <Button fullWidth onClick={() => (window.location.href = '/admin/users')}>
                 👥 Manage Users
               </Button>
-              <Button 
-                fullWidth 
+              <Button
+                fullWidth
                 variant="light"
                 onClick={() => (window.location.href = '/workflow')}
               >
                 🎫 View Tickets
               </Button>
-              <Button 
-                fullWidth 
+              <Button
+                fullWidth
                 variant="outline"
                 onClick={() => (window.location.href = '/admin/statistics')}
               >

@@ -9,6 +9,7 @@ import TestForm from '@components/TestForm'
 import TicketsList from '@routes/TicketsList'
 import MyTicketsList from '@routes/MyTicketsList'
 import TicketDetail from '@routes/TicketDetail'
+import CreateTicketPage from '@routes/CreateTicketPage'
 import { UserRole } from '@/constants/roles'
 import NotFound from '@components/NotFound'
 import AdminDashboard from '@/components/admin/AdminDashboard'
@@ -95,6 +96,12 @@ const myTicketsRoute = createRoute({
   getParentRoute: () => privateRoute,
   path: '/tickets/my-tickets',
   component: MyTicketsList,
+})
+
+const createTicketRoute = createRoute({
+  getParentRoute: () => privateRoute,
+  path: '/tickets/create',
+  component: CreateTicketPage,
 })
 
 const ticketDetailRoute = createRoute({
@@ -219,6 +226,7 @@ export const routeTree = rootRoute.addChildren([
     settingsRoute,
     ticketsRoute,
     myTicketsRoute,
+    createTicketRoute,
     ticketDetailRoute,
     workflowRoute.addChildren([
       assignedTicketsRoute,

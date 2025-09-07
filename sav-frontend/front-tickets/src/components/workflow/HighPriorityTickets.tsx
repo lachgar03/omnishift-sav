@@ -1,4 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
+import {
+  Container,
+  Title,
+  Text,
+  Grid,
+  Card,
+  Group,
+  Badge,
+  Stack,
+  Alert,
+  Skeleton,
+} from '@mantine/core'
+import { IconAlertTriangle, IconExclamationMark } from '@tabler/icons-react'
 import { ticketsApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
@@ -30,21 +43,31 @@ export default function HighPriorityTickets() {
 
   if (isLoading) {
     return (
-      <div className="high-priority-tickets">
-        <h1>High Priority Tickets</h1>
-        <div>Loading high priority tickets...</div>
-      </div>
+      <Container size="xl" py="md">
+        <Title order={1} mb="lg">
+          High Priority Tickets
+        </Title>
+        <Grid>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Grid.Col key={i} span={{ base: 12, sm: 6, md: 4 }}>
+              <Skeleton height={200} />
+            </Grid.Col>
+          ))}
+        </Grid>
+      </Container>
     )
   }
 
   if (error) {
     return (
-      <div className="high-priority-tickets">
-        <h1>High Priority Tickets</h1>
-        <div className="error-message" style={{ color: 'red', padding: '10px' }}>
+      <Container size="xl" py="md">
+        <Title order={1} mb="lg">
+          High Priority Tickets
+        </Title>
+        <Alert color="red" title="Error" icon={<IconAlertTriangle size="1rem" />}>
           Error loading tickets: {getErrorMessage(error)}
-        </div>
-      </div>
+        </Alert>
+      </Container>
     )
   }
 
@@ -64,126 +87,102 @@ export default function HighPriorityTickets() {
   const inProgressHighPriority = allHighPriorityTickets.filter((t) => t.status === 'IN_PROGRESS')
 
   return (
-    <div className="high-priority-tickets">
-      <h1>High Priority Tickets</h1>
+    <Container size="xl" py="md">
+      <Title order={1} mb="lg">
+        High Priority Tickets
+      </Title>
 
-      <div
-        className="priority-summary"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '15px',
-          marginBottom: '30px',
-        }}
-      >
-        <div
-          style={{
-            padding: '15px',
-            backgroundColor: '#fee',
-            borderRadius: '8px',
-            border: '1px solid #fcc',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#dc3545' }}>
-            {criticalTickets?.length || 0}
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>Critical Priority</div>
-        </div>
-
-        <div
-          style={{
-            padding: '15px',
-            backgroundColor: '#fff3cd',
-            borderRadius: '8px',
-            border: '1px solid #ffeaa7',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#fd7e14' }}>
-            {highTickets?.length || 0}
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>High Priority</div>
-        </div>
-
-        <div
-          style={{
-            padding: '15px',
-            backgroundColor: '#fff3cd',
-            borderRadius: '8px',
-            border: '1px solid #ffeaa7',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#e83e8c' }}>
-            {openHighPriority.length}
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>Awaiting Assignment</div>
-        </div>
-
-        <div
-          style={{
-            padding: '15px',
-            backgroundColor: '#d1ecf1',
-            borderRadius: '8px',
-            border: '1px solid #bee5eb',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#0c5460' }}>
-            {inProgressHighPriority.length}
-          </div>
-          <div style={{ fontSize: '14px', color: '#666' }}>In Progress</div>
-        </div>
-      </div>
+      <Grid mb="xl">
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card withBorder p="md" style={{ textAlign: 'center' }}>
+            <Text size="xl" fw={700} c="red">
+              {criticalTickets?.length || 0}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Critical Priority
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card withBorder p="md" style={{ textAlign: 'center' }}>
+            <Text size="xl" fw={700} c="orange">
+              {highTickets?.length || 0}
+            </Text>
+            <Text size="sm" c="dimmed">
+              High Priority
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card withBorder p="md" style={{ textAlign: 'center' }}>
+            <Text size="xl" fw={700} c="pink">
+              {openHighPriority.length}
+            </Text>
+            <Text size="sm" c="dimmed">
+              Awaiting Assignment
+            </Text>
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+          <Card withBorder p="md" style={{ textAlign: 'center' }}>
+            <Text size="xl" fw={700} c="cyan">
+              {inProgressHighPriority.length}
+            </Text>
+            <Text size="sm" c="dimmed">
+              In Progress
+            </Text>
+          </Card>
+        </Grid.Col>
+      </Grid>
 
       {/* Critical Tickets Section */}
       {criticalTickets && criticalTickets.length > 0 && (
-        <div className="critical-section" style={{ marginBottom: '30px' }}>
-          <h2
-            style={{
-              color: '#dc3545',
-              borderBottom: '2px solid #dc3545',
-              paddingBottom: '10px',
-            }}
-          >
-            🚨 Critical Priority Tickets
-          </h2>
-          <div className="tickets-grid" style={{ display: 'grid', gap: '15px', marginTop: '15px' }}>
+        <Stack gap="md" mb="xl">
+          <Group gap="sm">
+            <IconExclamationMark size="1.5rem" color="red" />
+            <Title order={2} c="red">
+              Critical Priority Tickets
+            </Title>
+          </Group>
+          <Grid>
             {criticalTickets.map((ticket) => (
-              <TicketCard key={ticket.id} ticket={ticket} isCritical={true} />
+              <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
+                <TicketCard ticket={ticket} isCritical={true} />
+              </Grid.Col>
             ))}
-          </div>
-        </div>
+          </Grid>
+        </Stack>
       )}
 
       {/* High Priority Tickets Section */}
       {highTickets && highTickets.length > 0 && (
-        <div className="high-section">
-          <h2
-            style={{
-              color: '#fd7e14',
-              borderBottom: '2px solid #fd7e14',
-              paddingBottom: '10px',
-            }}
-          >
-            ⚠️ High Priority Tickets
-          </h2>
-          <div className="tickets-grid" style={{ display: 'grid', gap: '15px', marginTop: '15px' }}>
+        <Stack gap="md" mb="xl">
+          <Group gap="sm">
+            <IconAlertTriangle size="1.5rem" color="orange" />
+            <Title order={2} c="orange">
+              High Priority Tickets
+            </Title>
+          </Group>
+          <Grid>
             {highTickets.map((ticket) => (
-              <TicketCard key={ticket.id} ticket={ticket} isCritical={false} />
+              <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
+                <TicketCard ticket={ticket} isCritical={false} />
+              </Grid.Col>
             ))}
-          </div>
-        </div>
+          </Grid>
+        </Stack>
       )}
 
       {allHighPriorityTickets.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-          <h3>No high priority tickets</h3>
-          <p>There are currently no high or critical priority tickets in the system.</p>
-        </div>
+        <Alert
+          color="blue"
+          title="No high priority tickets"
+          icon={<IconAlertTriangle size="1rem" />}
+        >
+          There are currently no high or critical priority tickets in the system.
+        </Alert>
       )}
-    </div>
+    </Container>
   )
 }
 
@@ -194,156 +193,105 @@ interface TicketCardProps {
 
 function TicketCard({ ticket, isCritical }: TicketCardProps) {
   return (
-    <div
-      className="ticket-card"
+    <Card
+      withBorder
+      p="md"
       style={{
-        border: '1px solid #ddd',
-        borderRadius: '8px',
-        padding: '20px',
         backgroundColor: isCritical ? '#ffeaea' : '#fff8e1',
         borderLeft: `4px solid ${getPriorityColor(ticket.priority)}`,
       }}
     >
-      <div
-        className="ticket-header"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: '15px',
-        }}
-      >
-        <div>
-          <h3 style={{ margin: '0 0 5px 0' }}>
-            <a href={`/tickets/${ticket.id}`} style={{ textDecoration: 'none', color: '#007bff' }}>
-              #{ticket.id} - {ticket.title}
-            </a>
-          </h3>
-          <div style={{ fontSize: '14px', color: '#666' }}>
-            Created: {formatDate(ticket.createdAt)}
+      <Stack gap="md">
+        <Group justify="space-between" align="flex-start">
+          <div>
+            <Title order={4} mb="xs">
+              <a
+                href={`/tickets/${ticket.id}`}
+                style={{ textDecoration: 'none', color: '#007bff' }}
+              >
+                #{ticket.id} - {ticket.title}
+              </a>
+            </Title>
+            <Text size="sm" c="dimmed">
+              Created: {formatDate(ticket.createdAt)}
+            </Text>
+            {ticket.updatedAt !== ticket.createdAt && (
+              <Text size="xs" c="dimmed">
+                Updated: {formatDate(ticket.updatedAt)}
+              </Text>
+            )}
           </div>
-          {ticket.updatedAt !== ticket.createdAt && (
-            <div style={{ fontSize: '12px', color: '#999' }}>
-              Updated: {formatDate(ticket.updatedAt)}
-            </div>
-          )}
-        </div>
 
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ marginBottom: '5px' }}>
-            <span
-              style={{
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '12px',
-                backgroundColor: getStatusColor(ticket.status),
-                color: 'white',
-              }}
-            >
+          <Stack gap="xs" align="flex-end">
+            <Badge color={getStatusColor(ticket.status)} variant="light">
               {ticket.status}
-            </span>
-          </div>
-          <div>
-            <span
-              style={{
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '12px',
-                backgroundColor: getPriorityColor(ticket.priority),
-                color: 'white',
-                fontWeight: 'bold',
-              }}
-            >
+            </Badge>
+            <Badge color={getPriorityColor(ticket.priority)} variant="filled">
               {ticket.priority}
-            </span>
-          </div>
-        </div>
-      </div>
+            </Badge>
+          </Stack>
+        </Group>
 
-      <div className="ticket-content" style={{ marginBottom: '15px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-          <div>
-            <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Type:</div>
-            <div style={{ marginBottom: '10px' }}>{ticket.type}</div>
-          </div>
-
+        <Grid>
+          <Grid.Col span={6}>
+            <Text size="sm" fw={500}>
+              Type:
+            </Text>
+            <Text size="sm">{ticket.type}</Text>
+          </Grid.Col>
           {ticket.assignedTeam && (
-            <div>
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Team:</div>
-              <div>
-                <span
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    fontSize: '12px',
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                  }}
-                >
-                  {ticket.assignedTeam}
-                </span>
-              </div>
-            </div>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={500}>
+                Team:
+              </Text>
+              <Badge color="gray" variant="light" size="sm">
+                {ticket.assignedTeam}
+              </Badge>
+            </Grid.Col>
           )}
-        </div>
+        </Grid>
 
-        <div style={{ marginTop: '10px' }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Description:</div>
-          <div
-            style={{
-              color: '#666',
-              lineHeight: '1.4',
-              maxHeight: '60px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
+        <div>
+          <Text size="sm" fw={500} mb="xs">
+            Description:
+          </Text>
+          <Text size="sm" c="dimmed" lineClamp={3}>
             {ticket.description}
-          </div>
+          </Text>
         </div>
-      </div>
 
-      <div
-        className="ticket-actions"
-        style={{
-          display: 'flex',
-          gap: '10px',
-          paddingTop: '15px',
-          borderTop: '1px solid #dee2e6',
-        }}
-      >
-        <button
-          style={{
-            padding: '8px 15px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px',
-          }}
-          onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
-        >
-          View Details
-        </button>
-
-        {!ticket.assignedUserId && !ticket.assignedTeam && (
-          <button
+        <Group gap="sm" pt="sm" style={{ borderTop: '1px solid #dee2e6' }}>
+          <a
+            href={`/tickets/${ticket.id}`}
             style={{
               padding: '8px 15px',
-              backgroundColor: '#dc3545',
+              backgroundColor: '#007bff',
               color: 'white',
-              border: 'none',
+              textDecoration: 'none',
               borderRadius: '4px',
-              cursor: 'pointer',
               fontSize: '14px',
             }}
-            onClick={() => (window.location.href = `/workflow/unassigned`)}
           >
-            Assign Now
-          </button>
-        )}
-      </div>
-    </div>
+            View Details
+          </a>
+
+          {!ticket.assignedUserId && !ticket.assignedTeam && (
+            <a
+              href="/workflow/unassigned"
+              style={{
+                padding: '8px 15px',
+                backgroundColor: '#dc3545',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '4px',
+                fontSize: '14px',
+              }}
+            >
+              Assign Now
+            </a>
+          )}
+        </Group>
+      </Stack>
+    </Card>
   )
 }

@@ -254,7 +254,7 @@ export default function TeamTickets() {
                 return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
               })
               .map((ticket) => (
-                <TeamTicketCard key={ticket.id} ticket={ticket} teamColor={teamColor} />
+                <TeamTicketCard key={ticket.id} ticket={ticket} />
               ))}
           </div>
         </div>
@@ -269,7 +269,7 @@ export default function TeamTickets() {
               .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
               .slice(0, 5)
               .map((ticket) => (
-                <TeamTicketCard key={ticket.id} ticket={ticket} teamColor={teamColor} />
+                <TeamTicketCard key={ticket.id} ticket={ticket} />
               ))}
           </div>
         </div>
@@ -287,7 +287,6 @@ export default function TeamTickets() {
 
 interface TeamTicketCardProps {
   ticket: TicketResponse
-  teamColor: string
 }
 
 function TeamTicketCard({ ticket }: TeamTicketCardProps) {
