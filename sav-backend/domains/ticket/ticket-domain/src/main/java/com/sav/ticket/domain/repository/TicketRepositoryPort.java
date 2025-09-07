@@ -20,10 +20,12 @@ public interface TicketRepositoryPort {
     void deleteById(Long id);
     boolean existsById(Long id);
     long count();
+    List<Ticket> findByCreatedByUserId(String userId);
 
     // Ticket-specific queries
     Optional<Ticket> findByIdWithMessages(Long id);
-    List<Ticket> findByCreatedByUserId(String userId);
+    Page<Ticket> findByCreatedByUserId(String userId, Pageable pageable);
+
     List<Ticket> findByAssignedUserId(String userId);
 
     // Status-based queries

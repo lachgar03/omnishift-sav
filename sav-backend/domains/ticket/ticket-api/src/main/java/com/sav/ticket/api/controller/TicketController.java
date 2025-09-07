@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/tickets")
@@ -59,7 +60,7 @@ public class TicketController {
     }
 
     /**
-     * Get all tickets with pagination
+     * Get all tickets with pagination (Admin/Technician only)
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
@@ -81,6 +82,35 @@ public class TicketController {
     }
 
     /**
+     * Get current user's tickets with pagination
+     */
+    @GetMapping("/my-tickets")
+    @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
+    public ResponseEntity<Page<TicketResponse>> getMyTicketsWithPagination(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @RequestParam(name = "sortBy", defaultValue = "createdAt") String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "desc") String sortDir,
+            Authentication authentication) {
+
+        // Extract user ID from JWT token
+        String userId = AuthUtil.extractUserIdFromAuth(authentication);
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Ticket> tickets = ticketService.getTicketsByUser(userId, pageable);
+        Page<TicketResponse> response = tickets.map(ticketMapper::toResponse);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Get ticket by ID
      */
     @GetMapping("/{ticketId}")
@@ -95,11 +125,51 @@ public class TicketController {
      * Update ticket
      */
     @PutMapping("/{ticketId}")
-    @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<TicketResponse> updateTicket(
             @PathVariable(name = "ticketId") Long ticketId,
-            @Valid @RequestBody UpdateTicketRequest request) {
+            @Valid @RequestBody UpdateTicketRequest request,
+            Authentication authentication) {
 
+        // Extract user ID from JWT token
+        String userId = AuthUtil.extractUserIdFromAuth(authentication);
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Check if user has permission to update this ticket
+        Optional<Ticket> existingTicket = ticketService.getTicketById(ticketId);
+        if (existingTicket.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Ticket ticket = existingTicket.get();
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        boolean isTechnician = authentication.getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"));
+
+        // Regular users can only update their own tickets and only title/description
+        if (!isAdmin && !isTechnician) {
+            if (!ticket.getCreatedByUserId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // For regular users, only allow updating title and description
+            return ticketService.updateTicket(
+                            ticketId,
+                            request.getTitle(),
+                            request.getDescription(),
+                            null, // status - not allowed for users
+                            null, // priority - not allowed for users
+                            null, // assignedTeam - not allowed for users
+                            null  // assignedUserId - not allowed for users
+                    )
+                    .map(updatedTicket -> ResponseEntity.ok(ticketMapper.toResponse(updatedTicket)))
+                    .orElse(ResponseEntity.notFound().build());
+        }
+
+        // Admin and Technicians can update all fields
         return ticketService.updateTicket(
                         ticketId,
                         request.getTitle(),
@@ -109,7 +179,7 @@ public class TicketController {
                         request.getAssignedTeam(),
                         request.getAssignedUserId()
                 )
-                .map(ticket -> ResponseEntity.ok(ticketMapper.toResponse(ticket)))
+                .map(updatedTicket -> ResponseEntity.ok(ticketMapper.toResponse(updatedTicket)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -151,26 +221,6 @@ public class TicketController {
         return ticketService.closeTicket(ticketId)
                 .map(ticket -> ResponseEntity.ok(ticketMapper.toResponse(ticket)))
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    /**
-     * Get tickets by user
-     */
-    @GetMapping("/my-tickets")
-    @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
-    public ResponseEntity<List<TicketResponse>> getMyTickets(Authentication authentication) {
-
-        String userId = AuthUtil.extractUserIdFromAuth(authentication);
-        if (userId == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        List<Ticket> tickets = ticketService.getTicketsByUser(userId);
-        List<TicketResponse> response = tickets.stream()
-                .map(ticketMapper::toResponse)
-                .toList();
-
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -224,6 +274,8 @@ public class TicketController {
                 .inProgressTickets(stats.inProgressTickets())
                 .assignedTickets(stats.assignedTickets())
                 .closedTickets(stats.closedTickets())
+                .resolvedTickets(stats.resolvedTickets())
+                .reopenedTickets(stats.reopenedTickets())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -301,5 +353,41 @@ public class TicketController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Update user's own ticket (limited to title and description)
+     */
+    @PutMapping("/my-tickets/{ticketId}")
+    @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
+    public ResponseEntity<TicketResponse> updateMyTicket(
+            @PathVariable(name = "ticketId") Long ticketId,
+            @Valid @RequestBody UpdateMyTicketRequest request,
+            Authentication authentication) {
+
+        String userId = AuthUtil.extractUserIdFromAuth(authentication);
+        if (userId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Verify the ticket belongs to the user
+        Optional<Ticket> ticketOpt = ticketService.getTicketById(ticketId);
+        if (ticketOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Ticket ticket = ticketOpt.get();
+        if (!ticket.getCreatedByUserId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Update only title and description
+        return ticketService.updateMyTicket(
+                        ticketId,
+                        request.getTitle(),
+                        request.getDescription()
+                )
+                .map(updatedTicket -> ResponseEntity.ok(ticketMapper.toResponse(updatedTicket)))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -16,7 +16,7 @@ public class MetricsEventHandler {
     @EventListener
     public void handleTicketCreated(TicketCreatedEvent event) {
         // TODO: Integrate with Micrometer when monitoring module is added
-        log.debug("📊 Recording ticket creation metrics: Priority={}, Type={}",
+        log.debug(" Recording ticket creation metrics: Priority={}, Type={}",
                 event.getPriority(), event.getType());
     }
 
@@ -24,7 +24,7 @@ public class MetricsEventHandler {
     public void handleTicketStatusChanged(TicketStatusChangedEvent event) {
         // Calculate resolution time for closed tickets
         if (event.getNewStatus().name().equals("CLOSED")) {
-            log.debug("⏱️ Recording ticket resolution metrics for: {}", event.getTicketId());
+            log.debug(" Recording ticket resolution metrics for: {}", event.getTicketId());
 
             // TODO: Calculate and record resolution time
             // - Query ticket creation time
@@ -35,7 +35,7 @@ public class MetricsEventHandler {
 
     @EventListener
     public void handleUserCreated(UserCreatedEvent event) {
-        log.debug("📈 Recording user creation metrics: Role={}", event.getRole());
+        log.debug(" Recording user creation metrics: Role={}", event.getRole());
 
         // TODO: Update user statistics
         // - Increment total user count

@@ -16,10 +16,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TicketRepository extends JpaRepository<Ticket, Long> , TicketRepositoryPort {
+public interface TicketRepository extends JpaRepository<Ticket, Long>, TicketRepositoryPort {
 
     // Basic queries
     List<Ticket> findByCreatedByUserId(String userId);
+    Page<Ticket> findByCreatedByUserId(String userId, Pageable pageable);
     List<Ticket> findByAssignedUserId(String userId);
 
     // Status-based queries

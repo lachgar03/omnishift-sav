@@ -12,8 +12,9 @@ public class TicketStatsResponse {
     private long inProgressTickets;
     private long assignedTickets;
     private long closedTickets;
+    private long resolvedTickets;
+    private long reopenedTickets;
 
-    // Calculated fields for frontend convenience
     public long getActiveTickets() {
         return openTickets + inProgressTickets + assignedTickets;
     }
@@ -21,5 +22,9 @@ public class TicketStatsResponse {
     public double getCompletionRate() {
         if (totalTickets == 0) return 0.0;
         return (double) closedTickets / totalTickets * 100;
+    }
+    public double getResolutionRate() {
+        if (totalTickets == 0) return 0.0;
+        return (double) (closedTickets + resolvedTickets) / totalTickets * 100;
     }
 }
