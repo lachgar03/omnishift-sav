@@ -10,6 +10,9 @@ import {
   Avatar,
   Menu,
   Button,
+  Flex,
+  Box,
+  ScrollArea,
 } from '@mantine/core'
 import {
   IconDashboard,
@@ -216,60 +219,72 @@ export default function PrivateLayout() {
   const getNavLinkStyles = () => ({
     color: 'white',
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+      transform: 'translateX(2px)',
+      transition: 'all 0.2s ease',
     },
     '&[data-active="true"]': {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'rgba(255, 255, 255, 0.25)',
       color: 'white',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
     }
   })
 
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 280, breakpoint: 'sm', collapsed: { mobile: !open } }}
+      navbar={{ 
+        width: 280, 
+        breakpoint: 'sm', 
+        collapsed: { mobile: !open }
+      }}
+      padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
+        <Flex h="100%" px="md" justify="space-between" align="center">
           <Group>
-            <Burger opened={open} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <Text fw={700} size="lg">
+            <Burger 
+              opened={open} 
+              onClick={toggle} 
+              hiddenFrom="sm" 
+              size="sm" 
+            />
+            <Text fw={700} size="lg" c="dark">
               SAV System
             </Text>
           </Group>
-          <Group gap="md">
-            <Menu shadow="md" width={200}>
-              <Menu.Target>
-                <Button variant="subtle" rightSection={<IconChevronDown size="1rem" />}>
-                  <Group gap="xs">
-                    <Avatar size="sm" color="blue">
-                      {user?.firstName?.[0] || 'U'}
-                    </Avatar>
-                    <Text size="sm">{user?.firstName || 'User'}</Text>
-                  </Group>
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>{getUserRoleText()}</Menu.Label>
-                <Menu.Item
-                  component={Link}
-                  to="/settings"
-                  leftSection={<IconSettings size="1rem" />}
-                >
-                  Settings
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconLogout size="1rem" />}
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
-        </Group>
+          
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Button variant="subtle" rightSection={<IconChevronDown size="1rem" />}>
+                <Group gap="xs">
+                  <Avatar size="sm" color="blue">
+                    {user?.firstName?.[0] || 'U'}
+                  </Avatar>
+                  <Text size="sm">{user?.firstName || 'User'}</Text>
+                </Group>
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>{getUserRoleText()}</Menu.Label>
+              <Menu.Item
+                component={Link}
+                to="/settings"
+                leftSection={<IconSettings size="1rem" />}
+              >
+                Settings
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconLogout size="1rem" />}
+                onClick={handleLogout}
+              >
+                Logout
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Flex>
       </AppShell.Header>
 
       <AppShell.Navbar 
@@ -280,7 +295,7 @@ export default function PrivateLayout() {
           borderRight: 'none',
         }}
       >
-        <Stack gap="xs">
+        <Flex direction="column" h="100%">
           <Text 
             size="sm" 
             fw={500} 
@@ -294,22 +309,32 @@ export default function PrivateLayout() {
           >
             Navigation
           </Text>
-          <Stack gap={4}>
-            {renderNavigation()}
-          </Stack>
-          <Divider my="xs" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
-          <NavLink
-            component={Link}
-            to="/settings"
-            label="Settings"
-            leftSection={<IconSettings size="1rem" />}
-            style={getNavLinkStyles()}
-          />
-        </Stack>
+          
+          <ScrollArea flex={1} scrollbarSize={4}>
+            <Stack gap={4}>
+              {renderNavigation()}
+            </Stack>
+          </ScrollArea>
+          
+          <Box>
+            <Divider my="xs" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+            <NavLink
+              component={Link}
+              to="/settings"
+              label="Settings"
+              leftSection={<IconSettings size="1rem" />}
+              style={getNavLinkStyles()}
+            />
+          </Box>
+        </Flex>
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Outlet />
+        <ScrollArea h="100vh" scrollbarSize={4}>
+          <Box p="md" h="100%">
+            <Outlet />
+          </Box>
+        </ScrollArea>
       </AppShell.Main>
     </AppShell>
   )

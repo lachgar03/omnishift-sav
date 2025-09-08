@@ -14,6 +14,8 @@ import {
   Button,
   ActionIcon,
   Tooltip,
+  Flex,
+  Box,
 } from '@mantine/core'
 import {
   IconTicket,
@@ -579,28 +581,24 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '1rem'
-    }}>
-      <Stack gap="lg" style={{ maxWidth: '100%', width: '100%' }}>
-        <Group justify="space-between" wrap="wrap">
-          <div>
-            <Title order={1} c="dark">Welcome to SAV System</Title>
-            <Text c="dimmed" size="lg">
-              Support ticket management dashboard
-            </Text>
-          </div>
-          <Group gap="sm">
-            <Text size="sm" c="dimmed" fw={500}>
-              {authStore.isAdmin ? 'Administrator' : authStore.isTechnician ? 'Technician' : 'User'}
-            </Text>
-          </Group>
+    <Flex direction="column" h="100%">
+      <Group justify="space-between" wrap="wrap" mb="lg">
+        <Box>
+          <Title order={1} c="dark">Welcome to SAV System</Title>
+          <Text c="dimmed" size="lg">
+            Support ticket management dashboard
+          </Text>
+        </Box>
+        <Group gap="sm">
+          <Text size="sm" c="dimmed" fw={500}>
+            {authStore.isAdmin ? 'Administrator' : authStore.isTechnician ? 'Technician' : 'User'}
+          </Text>
         </Group>
+      </Group>
 
+      <Box style={{ flex: 1 }}>
         {renderDashboard()}
-      </Stack>
-    </div>
+      </Box>
+    </Flex>
   )
 }
