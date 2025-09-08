@@ -31,15 +31,12 @@ public class TicketService {
     private final TicketRepositoryPort ticketRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    /**
-     * Create a new ticket
-     */
+
     @Transactional
     public Ticket createTicket(String title, String description, TicketType type,
                                Priority priority, String createdByUserId) {
         log.info("Creating new ticket: {} for user: {}", title, createdByUserId);
 
-        // Validate input
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("Ticket title cannot be empty");
         }
@@ -65,7 +62,6 @@ public class TicketService {
         Ticket savedTicket = ticketRepository.save(ticket);
         log.info("Created ticket with ID: {}", savedTicket.getId());
 
-        // Publish ticket created event
         eventPublisher.publishEvent(new TicketCreatedEvent(
                 savedTicket.getId(),
                 savedTicket.getTitle(),
@@ -78,9 +74,7 @@ public class TicketService {
         return savedTicket;
     }
 
-    /**
-     * Update an existing ticket with proper parameter handling and validation
-     */
+
     @Transactional
     public Optional<Ticket> updateTicket(Long ticketId, String title, String description,
                                          TicketStatus status, Priority priority,
@@ -93,11 +87,9 @@ public class TicketService {
 
         return ticketRepository.findById(ticketId)
                 .map(ticket -> {
-                    // Track status changes for events
                     TicketStatus oldStatus = ticket.getStatus();
                     boolean statusChanged = false;
 
-                    // Update fields only if they are provided and not null/empty
                     if (title != null && !title.trim().isEmpty()) {
                         ticket.setTitle(title.trim());
                     }
@@ -105,7 +97,6 @@ public class TicketService {
                         ticket.setDescription(description.trim());
                     }
 
-                    // Validate and update status
                     if (status != null && !status.equals(oldStatus)) {
                         if (isValidStatusTransition(oldStatus, status)) {
                             ticket.setStatus(status);
@@ -130,7 +121,6 @@ public class TicketService {
 
                     Ticket updatedTicket = ticketRepository.save(ticket);
 
-                    // Publish status change event if status changed
                     if (statusChanged) {
                         eventPublisher.publishEvent(new TicketStatusChangedEvent(
                                 ticketId,
@@ -145,9 +135,7 @@ public class TicketService {
                 });
     }
 
-    /**
-     * Update user's own ticket (limited fields only - title and description)
-     */
+
     @Transactional
     public Optional<Ticket> updateMyTicket(Long ticketId, String title, String description) {
         log.info("Updating user ticket ID: {} - title and description only", ticketId);
@@ -187,9 +175,7 @@ public class TicketService {
                 });
     }
 
-    /**
-     * Assign ticket to a team
-     */
+
     @Transactional
     public Optional<Ticket> assignTicketToTeam(Long ticketId, Team team) {
         log.info("Assigning ticket {} to team: {}", ticketId, team);
@@ -214,14 +200,12 @@ public class TicketService {
 
                     Ticket updatedTicket = ticketRepository.save(ticket);
 
-                    // Publish assignment event
                     eventPublisher.publishEvent(new TicketAssignedEvent(
                             ticketId,
                             team.toString(),
                             getCurrentUser()
                     ));
 
-                    // Publish status change event if status changed
                     if (ticket.getStatus() != oldStatus) {
                         eventPublisher.publishEvent(new TicketStatusChangedEvent(
                                 ticketId,
@@ -236,9 +220,7 @@ public class TicketService {
                 });
     }
 
-    /**
-     * Assign ticket to a user
-     */
+
     @Transactional
     public Optional<Ticket> assignTicketToUser(Long ticketId, String userId) {
         log.info("Assigning ticket {} to user: {}", ticketId, userId);
@@ -258,19 +240,16 @@ public class TicketService {
                     validateTicketAssignment(ticket, trimmedUserId);
                     ticket.setAssignedUserId(trimmedUserId);
 
-                    // Change status to IN_PROGRESS when assigned to a user
                     ticket.setStatus(TicketStatus.IN_PROGRESS);
 
                     Ticket updatedTicket = ticketRepository.save(ticket);
 
-                    // Publish assignment event
                     eventPublisher.publishEvent(new TicketAssignedEvent(
                             ticketId,
                             trimmedUserId,
                             getCurrentUser()
                     ));
 
-                    // Publish status change event if status changed
                     if (ticket.getStatus() != oldStatus) {
                         eventPublisher.publishEvent(new TicketStatusChangedEvent(
                                 ticketId,
@@ -285,9 +264,7 @@ public class TicketService {
                 });
     }
 
-    /**
-     * Close a ticket
-     */
+
     @Transactional
     public Optional<Ticket> closeTicket(Long ticketId) {
         log.info("Closing ticket: {}", ticketId);
@@ -300,7 +277,6 @@ public class TicketService {
                 .map(ticket -> {
                     TicketStatus oldStatus = ticket.getStatus();
 
-                    // Only allow closing if ticket is in a valid state
                     if (oldStatus == TicketStatus.CLOSED) {
                         log.warn("Ticket {} is already closed", ticketId);
                         return ticket; // Already closed, no change needed
@@ -309,7 +285,6 @@ public class TicketService {
                     ticket.setStatus(TicketStatus.CLOSED);
                     Ticket updatedTicket = ticketRepository.save(ticket);
 
-                    // Publish status change event
                     eventPublisher.publishEvent(new TicketStatusChangedEvent(
                             ticketId,
                             oldStatus,
@@ -322,9 +297,7 @@ public class TicketService {
                 });
     }
 
-    /**
-     * Reopen a ticket
-     */
+
     @Transactional
     public Optional<Ticket> reopenTicket(Long ticketId) {
         log.info("Reopening ticket: {}", ticketId);
@@ -337,7 +310,6 @@ public class TicketService {
                 .map(ticket -> {
                     TicketStatus oldStatus = ticket.getStatus();
 
-                    // Only allow reopening closed tickets
                     if (oldStatus != TicketStatus.CLOSED) {
                         log.warn("Cannot reopen ticket {} - current status is {}", ticketId, oldStatus);
                         throw new IllegalStateException("Can only reopen CLOSED tickets");
@@ -346,7 +318,6 @@ public class TicketService {
                     ticket.setStatus(TicketStatus.REOPENED);
                     Ticket updatedTicket = ticketRepository.save(ticket);
 
-                    // Publish status change event
                     eventPublisher.publishEvent(new TicketStatusChangedEvent(
                             ticketId,
                             oldStatus,
@@ -359,9 +330,7 @@ public class TicketService {
                 });
     }
 
-    /**
-     * Get ticket by ID
-     */
+
     public Optional<Ticket> getTicketById(Long ticketId) {
         if (ticketId == null) {
             return Optional.empty();
@@ -369,9 +338,7 @@ public class TicketService {
         return ticketRepository.findById(ticketId);
     }
 
-    /**
-     * Get ticket with messages
-     */
+
     public Optional<Ticket> getTicketWithMessages(Long ticketId) {
         if (ticketId == null) {
             return Optional.empty();
@@ -379,16 +346,12 @@ public class TicketService {
         return ticketRepository.findByIdWithMessages(ticketId);
     }
 
-    /**
-     * Get all tickets with pagination
-     */
+
     public Page<Ticket> getAllTickets(Pageable pageable) {
         return ticketRepository.findAll(pageable);
     }
 
-    /**
-     * Get tickets by user (without pagination)
-     */
+
     public List<Ticket> getTicketsByUser(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
             return List.of();
@@ -396,9 +359,7 @@ public class TicketService {
         return ticketRepository.findByCreatedByUserId(userId.trim());
     }
 
-    /**
-     * Get tickets by user with pagination
-     */
+
     public Page<Ticket> getTicketsByUser(String userId, Pageable pageable) {
         if (userId == null || userId.trim().isEmpty()) {
             return Page.empty();
@@ -406,9 +367,7 @@ public class TicketService {
         return ticketRepository.findByCreatedByUserId(userId.trim(), pageable);
     }
 
-    /**
-     * Get tickets assigned to user
-     */
+
     public List<Ticket> getTicketsAssignedToUser(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
             return List.of();
@@ -416,9 +375,7 @@ public class TicketService {
         return ticketRepository.findByAssignedUserId(userId.trim());
     }
 
-    /**
-     * Get tickets by status
-     */
+
     public Page<Ticket> getTicketsByStatus(TicketStatus status, Pageable pageable) {
         if (status == null) {
             return Page.empty();
@@ -426,9 +383,7 @@ public class TicketService {
         return ticketRepository.findByStatus(status, pageable);
     }
 
-    /**
-     * Get ticket count by status
-     */
+
     public long getTicketCountByStatus(TicketStatus status) {
         if (status == null) {
             return 0;
@@ -436,9 +391,7 @@ public class TicketService {
         return ticketRepository.countByStatus(status);
     }
 
-    /**
-     * Get tickets by priority
-     */
+
     public List<Ticket> getTicketsByPriority(Priority priority) {
         if (priority == null) {
             return List.of();
@@ -446,9 +399,7 @@ public class TicketService {
         return ticketRepository.findByPriority(priority);
     }
 
-    /**
-     * Get tickets by team
-     */
+
     public List<Ticket> getTicketsByTeam(Team team) {
         if (team == null) {
             return List.of();
@@ -456,9 +407,7 @@ public class TicketService {
         return ticketRepository.findByAssignedTeam(team);
     }
 
-    /**
-     * Get ticket statistics for dashboard
-     */
+
     public TicketStats getTicketStatistics() {
         long totalTickets = ticketRepository.count();
         long openTickets = getTicketCountByStatus(TicketStatus.OPEN);
@@ -482,9 +431,7 @@ public class TicketService {
         );
     }
 
-    /**
-     * Validate ticket assignment business rules
-     */
+
     private void validateTicketAssignment(Ticket ticket, String assignedUserId) {
         if (assignedUserId != null && !assignedUserId.trim().isEmpty()) {
             // In a real implementation, you'd validate:
@@ -502,9 +449,7 @@ public class TicketService {
         }
     }
 
-    /**
-     * Validate status transition business rules
-     */
+
     private boolean isValidStatusTransition(TicketStatus from, TicketStatus to) {
         if (from == null || to == null) {
             return false;
@@ -521,9 +466,7 @@ public class TicketService {
         };
     }
 
-    /**
-     * Helper method to get current user context from SecurityContext
-     */
+
     private String getCurrentUser() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -534,13 +477,10 @@ public class TicketService {
             log.warn("Could not extract current user from security context: {}", e.getMessage());
         }
 
-        // Fallback for system operations or when security context is not available
         return "system";
     }
 
-    /**
-     * Check if user can update ticket (business rule validation)
-     */
+
     public boolean canUserUpdateTicket(String userId, Long ticketId) {
         if (userId == null || userId.trim().isEmpty() || ticketId == null) {
             return false;
@@ -551,9 +491,7 @@ public class TicketService {
                 .orElse(false);
     }
 
-    /**
-     * Enhanced record class for ticket statistics with additional metrics
-     */
+
     public record TicketStats(
             long totalTickets,
             long openTickets,

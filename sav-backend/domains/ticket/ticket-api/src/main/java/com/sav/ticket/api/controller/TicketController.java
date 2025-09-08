@@ -42,7 +42,6 @@ public class TicketController {
             @Valid @RequestBody CreateTicketRequest request,
             Authentication authentication) {
 
-        // Extract user ID from JWT token
         String userId = AuthUtil.extractUserIdFromAuth(authentication);
 
         log.info("Creating ticket: {} for user: {}", request.getTitle(), userId);
@@ -59,9 +58,7 @@ public class TicketController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Get all tickets with pagination (Admin/Technician only)
-     */
+
     @GetMapping
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     public ResponseEntity<Page<TicketResponse>> getAllTickets(
@@ -81,9 +78,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get current user's tickets with pagination
-     */
+
     @GetMapping("/my-tickets")
     @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<Page<TicketResponse>> getMyTicketsWithPagination(
@@ -93,7 +88,6 @@ public class TicketController {
             @RequestParam(name = "sortDir", defaultValue = "desc") String sortDir,
             Authentication authentication) {
 
-        // Extract user ID from JWT token
         String userId = AuthUtil.extractUserIdFromAuth(authentication);
         if (userId == null) {
             return ResponseEntity.badRequest().build();
@@ -110,9 +104,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get ticket by ID
-     */
+
     @GetMapping("/{ticketId}")
     @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<TicketResponse> getTicketById(@PathVariable(name = "ticketId") Long ticketId) {
@@ -121,9 +113,7 @@ public class TicketController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Update ticket
-     */
+
     @PutMapping("/{ticketId}")
     @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<TicketResponse> updateTicket(
@@ -131,13 +121,11 @@ public class TicketController {
             @Valid @RequestBody UpdateTicketRequest request,
             Authentication authentication) {
 
-        // Extract user ID from JWT token
         String userId = AuthUtil.extractUserIdFromAuth(authentication);
         if (userId == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        // Check if user has permission to update this ticket
         Optional<Ticket> existingTicket = ticketService.getTicketById(ticketId);
         if (existingTicket.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -149,27 +137,24 @@ public class TicketController {
         boolean isTechnician = authentication.getAuthorities().stream()
                 .anyMatch(auth -> auth.getAuthority().equals("ROLE_TECHNICIAN"));
 
-        // Regular users can only update their own tickets and only title/description
         if (!isAdmin && !isTechnician) {
             if (!ticket.getCreatedByUserId().equals(userId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
-            // For regular users, only allow updating title and description
             return ticketService.updateTicket(
                             ticketId,
                             request.getTitle(),
                             request.getDescription(),
-                            null, // status - not allowed for users
-                            null, // priority - not allowed for users
-                            null, // assignedTeam - not allowed for users
-                            null  // assignedUserId - not allowed for users
+                            null,
+                            null,
+                            null,
+                            null
                     )
                     .map(updatedTicket -> ResponseEntity.ok(ticketMapper.toResponse(updatedTicket)))
                     .orElse(ResponseEntity.notFound().build());
         }
 
-        // Admin and Technicians can update all fields
         return ticketService.updateTicket(
                         ticketId,
                         request.getTitle(),
@@ -183,9 +168,7 @@ public class TicketController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Assign ticket to team - ADMIN only
-     */
+
     @PatchMapping("/{ticketId}/assign-team")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TicketResponse> assignToTeam(
@@ -197,9 +180,7 @@ public class TicketController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Assign ticket to user - ADMIN only
-     */
+
     @PatchMapping("/{ticketId}/assign-user")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TicketResponse> assignToUser(
@@ -223,9 +204,7 @@ public class TicketController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Get tickets assigned to user
-     */
+
     @GetMapping("/assigned-to-me")
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     public ResponseEntity<List<TicketResponse>> getTicketsAssignedToMe(Authentication authentication) {
@@ -243,9 +222,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get tickets by status
-     */
+
     @GetMapping("/status/{status}")
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     public ResponseEntity<Page<TicketResponse>> getTicketsByStatus(
@@ -260,9 +237,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get ticket statistics for dashboard
-     */
+
     @GetMapping("/statistics")
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     public ResponseEntity<TicketStatsResponse> getTicketStatistics() {
@@ -281,9 +256,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Reopen a closed ticket
-     */
+
     @PatchMapping("/{ticketId}/reopen")
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     public ResponseEntity<TicketResponse> reopenTicket(
@@ -293,9 +266,7 @@ public class TicketController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Get tickets by priority
-     */
+
     @GetMapping("/priority/{priority}")
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     public ResponseEntity<List<TicketResponse>> getTicketsByPriority(
@@ -307,9 +278,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get tickets by team
-     */
+
     @GetMapping("/team/{team}")
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
     public ResponseEntity<List<TicketResponse>> getTicketsByTeam(
@@ -321,9 +290,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get dashboard summary for current user
-     */
+
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<DashboardResponse> getDashboardSummary(Authentication authentication) {
@@ -332,11 +299,9 @@ public class TicketController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Get user's tickets
         List<Ticket> myTickets = ticketService.getTicketsByUser(userId);
         List<Ticket> assignedToMe = ticketService.getTicketsAssignedToUser(userId);
 
-        // Build dashboard response
         DashboardResponse response = DashboardResponse.builder()
                 .myTicketsCount(myTickets.size())
                 .assignedToMeCount(assignedToMe.size())
@@ -355,9 +320,7 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Update user's own ticket (limited to title and description)
-     */
+
     @PutMapping("/my-tickets/{ticketId}")
     @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<TicketResponse> updateMyTicket(
@@ -370,7 +333,6 @@ public class TicketController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Verify the ticket belongs to the user
         Optional<Ticket> ticketOpt = ticketService.getTicketById(ticketId);
         if (ticketOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -381,7 +343,6 @@ public class TicketController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // Update only title and description
         return ticketService.updateMyTicket(
                         ticketId,
                         request.getTitle(),
