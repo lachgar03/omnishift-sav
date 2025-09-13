@@ -13,6 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -62,8 +63,10 @@ public class Ticket {
     private String assignedUserId;
 
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TicketMessage> messages;
+    @Builder.Default
+    private List<TicketMessage> messages = new ArrayList<>();
 
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TicketAttachment> attachments;
+    @Builder.Default
+    private List<TicketAttachment> attachments = new ArrayList<>();
 }

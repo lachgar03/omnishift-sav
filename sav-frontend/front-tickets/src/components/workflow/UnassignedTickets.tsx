@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import {
   Container,
   Title,
@@ -25,6 +26,7 @@ import { Team } from '@/constants/roles'
 import type { TicketResponse, UserResponse, AssignTeamRequest, AssignUserRequest } from '@/types'
 
 export default function UnassignedTickets() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [actionError, setActionError] = useState<string>('')
 
@@ -171,12 +173,22 @@ export default function UnassignedTickets() {
                 <Group justify="space-between">
                   <div>
                     <Title order={4}>
-                      <a
-                        href={`/tickets/${ticket.id}`}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      <button
+                        onClick={() => navigate({ to: `/tickets/${ticket.id}` })}
+                        style={{
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          fontSize: 'inherit',
+                          fontFamily: 'inherit',
+                          padding: 0,
+                        }}
                       >
                         #{ticket.id} - {ticket.title}
-                      </a>
+                      </button>
                     </Title>
                     <Group gap="xs" mt="xs">
                       <IconCalendar size="0.8rem" />
@@ -278,7 +290,7 @@ export default function UnassignedTickets() {
                     fullWidth
                     variant="light"
                     leftSection={<IconTicket size="1rem" />}
-                    onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
+                    onClick={() => navigate({ to: `/tickets/${ticket.id}` })}
                   >
                     View Full Details
                   </Button>

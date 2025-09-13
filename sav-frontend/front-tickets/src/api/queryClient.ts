@@ -2,9 +2,7 @@ import { QueryCache, QueryClient } from '@tanstack/react-query'
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: () => {
-      // Let React Query error boundaries handle thrown errors in components
-    },
+    onError: () => {},
   }),
   defaultOptions: {
     queries: {

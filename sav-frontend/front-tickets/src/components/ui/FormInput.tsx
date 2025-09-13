@@ -28,6 +28,8 @@ export function FormInput<TFieldValues extends FieldValues>({
             label={label}
             placeholder={placeholder}
             error={fieldState.error?.message}
+            size="md"
+            radius="md"
             {...field}
           />
         ) : (
@@ -35,6 +37,8 @@ export function FormInput<TFieldValues extends FieldValues>({
             label={label}
             placeholder={placeholder}
             error={fieldState.error?.message}
+            size="md"
+            radius="md"
             {...field}
           />
         )

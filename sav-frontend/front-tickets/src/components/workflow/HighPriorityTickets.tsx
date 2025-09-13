@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import {
   Container,
   Title,
@@ -20,6 +21,7 @@ import { Priority } from '@/constants/roles'
 import type { TicketResponse } from '@/types'
 
 export default function HighPriorityTickets() {
+  const navigate = useNavigate()
   const {
     data: highTickets,
     isLoading: isLoadingHigh,
@@ -147,7 +149,12 @@ export default function HighPriorityTickets() {
           <Grid>
             {criticalTickets.map((ticket) => (
               <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
-                <TicketCard ticket={ticket} isCritical={true} />
+                <TicketCard
+                  ticket={ticket}
+                  isCritical={true}
+                  onViewTicket={(ticketId) => navigate({ to: `/tickets/${ticketId}` })}
+                  onNavigateToUnassigned={() => navigate({ to: '/workflow/unassigned' })}
+                />
               </Grid.Col>
             ))}
           </Grid>
@@ -166,7 +173,12 @@ export default function HighPriorityTickets() {
           <Grid>
             {highTickets.map((ticket) => (
               <Grid.Col key={ticket.id} span={{ base: 12, sm: 6, md: 4 }}>
-                <TicketCard ticket={ticket} isCritical={false} />
+                <TicketCard
+                  ticket={ticket}
+                  isCritical={false}
+                  onViewTicket={(ticketId) => navigate({ to: `/tickets/${ticketId}` })}
+                  onNavigateToUnassigned={() => navigate({ to: '/workflow/unassigned' })}
+                />
               </Grid.Col>
             ))}
           </Grid>
@@ -189,9 +201,11 @@ export default function HighPriorityTickets() {
 interface TicketCardProps {
   ticket: TicketResponse
   isCritical: boolean
+  onViewTicket: (ticketId: number) => void
+  onNavigateToUnassigned: () => void
 }
 
-function TicketCard({ ticket, isCritical }: TicketCardProps) {
+function TicketCard({ ticket, isCritical, onViewTicket, onNavigateToUnassigned }: TicketCardProps) {
   return (
     <Card
       withBorder
@@ -206,7 +220,7 @@ function TicketCard({ ticket, isCritical }: TicketCardProps) {
           <div>
             <Title order={4} mb="xs">
               <a
-                href={`/tickets/${ticket.id}`}
+                onClick={() => onViewTicket(ticket.id)}
                 style={{ textDecoration: 'none', color: '#007bff' }}
               >
                 #{ticket.id} - {ticket.title}
@@ -261,23 +275,24 @@ function TicketCard({ ticket, isCritical }: TicketCardProps) {
         </div>
 
         <Group gap="sm" pt="sm" style={{ borderTop: '1px solid #dee2e6' }}>
-          <a
-            href={`/tickets/${ticket.id}`}
+          <button
+            onClick={() => onViewTicket(ticket.id)}
             style={{
               padding: '8px 15px',
               backgroundColor: '#007bff',
               color: 'white',
-              textDecoration: 'none',
+              border: 'none',
               borderRadius: '4px',
               fontSize: '14px',
+              cursor: 'pointer',
             }}
           >
             View Details
-          </a>
+          </button>
 
           {!ticket.assignedUserId && !ticket.assignedTeam && (
             <a
-              href="/workflow/unassigned"
+              onClick={onNavigateToUnassigned}
               style={{
                 padding: '8px 15px',
                 backgroundColor: '#dc3545',

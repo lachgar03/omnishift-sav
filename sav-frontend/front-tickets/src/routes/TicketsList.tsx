@@ -34,7 +34,7 @@ import { formatDate } from '@/utils/formatDate'
 import { TicketStatus, Priority, Team } from '@/constants/roles'
 import type { TicketResponse } from '@/types'
 
-export default function TicketsList() {
+function TicketsList() {
   const navigate = useNavigate()
   const { isAdmin, isTechnician } = useAuthStore()
   const [page, setPage] = useState(0)
@@ -111,11 +111,13 @@ export default function TicketsList() {
 
   if (isLoading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        padding: '1rem'
-      }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          padding: '1rem',
+        }}
+      >
         <Group justify="space-between" mb="lg">
           <Group gap="sm">
             <IconTicket size="2rem" />
@@ -135,11 +137,13 @@ export default function TicketsList() {
 
   if (error) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        padding: '1rem'
-      }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          padding: '1rem',
+        }}
+      >
         <Group justify="space-between" mb="lg">
           <Group gap="sm">
             <IconTicket size="2rem" />
@@ -156,11 +160,13 @@ export default function TicketsList() {
   const showTeamFilter = isAdmin || isTechnician
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '1rem'
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '1rem',
+      }}
+    >
       <Group justify="space-between" mb="lg">
         <Group gap="sm">
           <IconTicket size="2rem" />
@@ -332,3 +338,5 @@ export default function TicketsList() {
     </div>
   )
 }
+
+export default TicketsList

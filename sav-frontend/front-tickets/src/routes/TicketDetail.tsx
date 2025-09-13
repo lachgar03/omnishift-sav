@@ -31,6 +31,20 @@ import { EditTicketForm } from '@/components/EditTicketForm'
 
 export default function TicketDetail() {
   const { id } = useParams({ from: '/tickets/$id' })
+
+  // Early return if no ID - must be before any other hooks
+  if (!id) {
+    return (
+      <Alert color="red" title="Invalid Ticket ID">
+        No ticket ID provided in the URL.
+      </Alert>
+    )
+  }
+
+  return <TicketDetailContent id={id} />
+}
+
+function TicketDetailContent({ id }: { id: string }) {
   const { isAdmin, isTechnician, user } = useAuthStore()
   const queryClient = useQueryClient()
   const [messageContent, setMessageContent] = useState('')
@@ -75,11 +89,13 @@ export default function TicketDetail() {
 
   if (isLoading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        padding: '1rem'
-      }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          padding: '1rem',
+        }}
+      >
         <Stack gap="md">
           <Skeleton height={40} />
           <Skeleton height={200} />
@@ -91,11 +107,13 @@ export default function TicketDetail() {
 
   if (error || !ticket) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        padding: '1rem'
-      }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          padding: '1rem',
+        }}
+      >
         <Alert icon={<IconAlertCircle size="1rem" />} color="red" title="Error">
           Error loading ticket details
         </Alert>
@@ -109,7 +127,6 @@ export default function TicketDetail() {
       addMessageMutation.mutate(messageContent)
     }
   }
-
 
   const handleUploadAttachment = (e: React.FormEvent) => {
     e.preventDefault()
@@ -154,11 +171,13 @@ export default function TicketDetail() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '1rem'
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '1rem',
+      }}
+    >
       <Stack gap="md" style={{ maxWidth: '100%', width: '100%' }}>
         <Card withBorder>
           <Stack gap="md">
@@ -261,7 +280,7 @@ export default function TicketDetail() {
         <Card withBorder>
           <Stack gap="md">
             <Title order={3}>Messages</Title>
-            {ticket.messages.length === 0 ? (
+            {!ticket.messages || ticket.messages.length === 0 ? (
               <Text c="dimmed">No messages yet.</Text>
             ) : (
               <Stack gap="sm">

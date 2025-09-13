@@ -11,12 +11,59 @@ const keycloakConfig: Keycloak.KeycloakConfig = {
 
 export const keycloak = new Keycloak(keycloakConfig)
 
+export const initKeycloak = async (): Promise<boolean> => {
+  try {
+    console.log('Initializing Keycloak with config:', {
+      url: keycloakConfig.url,
+      realm: keycloakConfig.realm,
+      clientId: keycloakConfig.clientId,
+    })
+
+    // First, check if Keycloak is accessible
+    try {
+      const healthCheck = await fetch(`${keycloakConfig.url}/health`)
+      if (!healthCheck.ok) {
+        console.warn('Keycloak health check failed, but continuing with init...')
+      }
+    } catch (healthError) {
+      console.warn('Keycloak server might not be running:', healthError)
+    }
+
+    const authenticated = await keycloak.init({
+      onLoad: 'check-sso',
+      silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
+      pkceMethod: 'S256',
+    })
+
+    console.log('Keycloak init result:', {
+      authenticated,
+      token: keycloak.token ? 'present' : 'missing',
+      refreshToken: keycloak.refreshToken ? 'present' : 'missing',
+      tokenParsed: keycloak.tokenParsed,
+    })
+
+    if (authenticated) {
+      console.log('User authenticated')
+    } else {
+      console.log('User not authenticated')
+    }
+
+    return authenticated
+  } catch (error) {
+    console.error('Keycloak initialization failed:', error)
+
+    // In development, if Keycloak is not available, we can continue without authentication
+    if (import.meta.env.DEV) {
+      console.warn('Keycloak not available in development mode, continuing without authentication')
+      return false
+    }
+
+    return false
+  }
+}
+
 export async function initAuth(): Promise<boolean> {
-  const authenticated = await keycloak.init({
-    onLoad: 'login-required',
-    checkLoginIframe: false,
-    pkceMethod: 'S256',
-  })
+  const authenticated = await initKeycloak()
   wireKeycloakEvents()
   if (authenticated) {
     syncStoreFromKeycloak()
@@ -85,6 +132,10 @@ function wireKeycloakEvents() {
   keycloak.onAuthSuccess = () => {
     syncStoreFromKeycloak()
     scheduleTokenRefresh()
+    // Redirect to dashboard after successful authentication
+    if (window.location.pathname === '/login') {
+      window.location.href = '/dashboard'
+    }
   }
   keycloak.onAuthLogout = () => {
     clearScheduledRefresh()
@@ -102,7 +153,16 @@ function syncStoreFromKeycloak() {
   const token = keycloak.token
   const parsed = keycloak.tokenParsed as Record<string, unknown> | undefined
 
-  if (!token || !parsed) return
+  console.log('Syncing store from Keycloak:', {
+    hasToken: !!token,
+    hasParsedToken: !!parsed,
+    parsedToken: parsed,
+  })
+
+  if (!token || !parsed) {
+    console.log('No token or parsed token available for sync')
+    return
+  }
 
   // Map Keycloak roles to our UserRole enum
   const keycloakRoles: string[] = Array.isArray(
@@ -110,9 +170,14 @@ function syncStoreFromKeycloak() {
   )
     ? ((parsed?.realm_access as { roles?: string[] })?.roles as string[])
     : []
+
+  console.log('Keycloak roles:', keycloakRoles)
+
   const roles: UserRole[] = keycloakRoles
     .map((role) => role.toUpperCase())
     .filter((role) => Object.values(UserRole).includes(role as UserRole)) as UserRole[]
+
+  console.log('Mapped roles:', roles)
 
   const user: AuthUser = {
     id: String(parsed.sub ?? ''),
@@ -124,5 +189,6 @@ function syncStoreFromKeycloak() {
     roles: roles,
   }
 
+  console.log('Setting auth user:', user)
   useAuthStore.getState().setAuth(user, token)
 }

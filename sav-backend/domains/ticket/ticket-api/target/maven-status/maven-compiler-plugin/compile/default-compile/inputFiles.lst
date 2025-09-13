@@ -14,3 +14,4 @@ C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\ticket\ticket-ap
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\ticket\ticket-api\src\main\java\com\sav\ticket\api\controller\TicketController.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\ticket\ticket-api\src\main\java\com\sav\ticket\api\controller\TicketAttachmentController.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\ticket\ticket-api\src\main\java\com\sav\ticket\api\dto\CreateTicketMessageRequest.java
+C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\ticket\ticket-api\src\main\java\com\sav\ticket\api\dto\UpdateMyTicketRequest.java

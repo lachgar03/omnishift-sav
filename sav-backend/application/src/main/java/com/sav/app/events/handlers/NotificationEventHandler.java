@@ -13,24 +13,25 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 public class NotificationEventHandler {
+    
     @EventListener
     @Async("eventTaskExecutor")
     public void handleTicketCreated(TicketCreatedEvent event) {
         log.info("📧 Sending notifications for new ticket: {}", event.getTicketId());
 
-        // Simulate notification logic
         try {
             Thread.sleep(100); // Simulate async work
 
             // TODO: Implement actual notification logic
-            // - Send email to admins
-            // - Send Slack notification
-            // - Update dashboard counters
+            // TODO: Add email notification service
+            // TODO: Add Slack integration
+            // TODO: Add push notifications
+            // TODO: Update dashboard counters
 
             log.info("✅ Notifications sent for ticket: {}", event.getTicketId());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error(" Notification sending interrupted for ticket: {}", event.getTicketId());
+            log.error("❌ Notification sending interrupted for ticket: {}", event.getTicketId());
         }
     }
 
@@ -40,22 +41,44 @@ public class NotificationEventHandler {
         log.info("📬 Notifying assignee for ticket: {} → {}",
                 event.getTicketId(), event.getAssignedTo());
 
-        // TODO: Send notification to assignee
-        // - Email notification
-        // - In-app notification
-        // - Mobile push notification
+        try {
+            Thread.sleep(50); // Simulate async work
+            
+            // TODO: Implement actual notification logic
+            // - Email notification to assignee
+            // - In-app notification
+            // - Mobile push notification
+            
+            log.info("✅ Assignment notification sent for ticket: {} to user: {}", 
+                    event.getTicketId(), event.getAssignedTo());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("❌ Assignment notification interrupted for ticket: {}", event.getTicketId());
+        }
     }
 
     @EventListener
     @Async("eventTaskExecutor")
     public void handleTicketStatusChanged(TicketStatusChangedEvent event) {
-        if (event.getNewStatus().name().equals("CLOSED")) {
-            log.info("🎉 Ticket closed, sending completion notifications: {}", event.getTicketId());
+        log.info("📋 Notifying status change for ticket: {} - {} → {}",
+                event.getTicketId(), event.getOldStatus(), event.getNewStatus());
 
-            // TODO: Send completion notifications
-            // - Notify ticket creator
-            // - Send satisfaction survey
-            // - Update completion metrics
+        try {
+            Thread.sleep(50); // Simulate async work
+            
+            if (event.getNewStatus().name().equals("CLOSED")) {
+                log.info("🎉 Ticket closed, sending completion notifications: {}", event.getTicketId());
+                
+                // TODO: Send completion notifications
+                // - Notify ticket creator
+                // - Send satisfaction survey
+                // - Update completion metrics
+            }
+            
+            log.info("✅ Status change notification sent for ticket: {}", event.getTicketId());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("❌ Status change notification interrupted for ticket: {}", event.getTicketId());
         }
     }
 }

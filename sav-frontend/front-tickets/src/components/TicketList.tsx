@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/authStore'
-import { ticketsApi } from '@/api'
+import { ticketService } from '@/services/ticketService'
 import type { TicketResponse } from '@/types'
 import { TicketStatus, Priority, Team } from '@/constants/roles'
 import {
@@ -53,13 +53,13 @@ export const TicketList = ({
   })
 
   // Fetch tickets if not provided as props
-  const { data: fetchedTickets, isLoading } = useQuery<TicketResponse[]>({
+  const { data: fetchedTicketsData, isLoading } = useQuery({
     queryKey: ['tickets', filters],
-    queryFn: () => ticketsApi.getMyTickets(),
+    queryFn: () => ticketService.getMyTickets(filters.page, filters.size),
     enabled: !propTickets,
   })
 
-  const tickets = propTickets || fetchedTickets || []
+  const tickets = propTickets || fetchedTicketsData?.content || []
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 0 }))

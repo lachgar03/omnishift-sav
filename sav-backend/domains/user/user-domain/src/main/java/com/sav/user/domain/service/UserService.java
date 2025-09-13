@@ -19,6 +19,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepositoryPort userRepository;
+    private final UserSyncService userSyncService;
 
     /**
      * Create or update user profile (sync with Keycloak)
@@ -175,6 +176,70 @@ public class UserService {
 
     public List<User> getUsersByStatus(UserStatus status) {
         return userRepository.findByStatus(status);
+    }
+
+    /**
+     * Get or create user from Keycloak JWT token data
+     * This method ensures user exists in database, creating if necessary
+     * Thread-safe implementation to prevent race conditions
+     */
+    @Transactional
+    public synchronized User getOrCreateUserFromKeycloak(String keycloakId, String username, String email, 
+                                          String firstName, String lastName, String fullName, 
+                                          UserRole role) {
+        log.info("Getting or creating user from Keycloak: {} (ID: {})", username, keycloakId);
+
+        // First try to get existing user
+        Optional<User> existingUser = userRepository.findById(keycloakId);
+        if (existingUser.isPresent()) {
+            log.debug("User already exists: {}", username);
+            return existingUser.get();
+        }
+
+        // User doesn't exist, create from Keycloak data
+        log.info("User not found in database, creating from Keycloak data: {}", username);
+        return userSyncService.syncUserFromKeycloak(keycloakId, username, email, 
+                firstName, lastName, fullName, role);
+    }
+
+    /**
+     * Get or create user with minimal information (fallback)
+     * Used when JWT token has limited information
+     * Thread-safe implementation to prevent race conditions
+     */
+    @Transactional
+    public synchronized User getOrCreateMinimalUser(String keycloakId, String username, String email, UserRole role) {
+        log.info("Getting or creating minimal user: {} (ID: {})", username, keycloakId);
+
+        // First try to get existing user
+        Optional<User> existingUser = userRepository.findById(keycloakId);
+        if (existingUser.isPresent()) {
+            log.debug("User already exists: {}", username);
+            return existingUser.get();
+        }
+
+        // User doesn't exist, create minimal user
+        log.info("User not found in database, creating minimal user: {}", username);
+        return userSyncService.createMinimalUser(keycloakId, username, email, role);
+    }
+
+    /**
+     * Ensure user exists in database (fallback method)
+     * This is called when user tries to access the app but doesn't exist in database
+     * Thread-safe implementation to prevent race conditions
+     */
+    @Transactional
+    public synchronized User ensureUserExists(String keycloakId, String username, String email) {
+        log.info("Ensuring user exists: {} (ID: {})", username, keycloakId);
+
+        Optional<User> existingUser = userRepository.findById(keycloakId);
+        if (existingUser.isPresent()) {
+            return existingUser.get();
+        }
+
+        // Create user with default USER role
+        log.warn("User not found in database, creating with default role: {}", username);
+        return userSyncService.createMinimalUser(keycloakId, username, email, UserRole.USER);
     }
 
     // Inner class for statistics

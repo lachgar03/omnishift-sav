@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import {
   Container,
   Title,
@@ -12,18 +13,19 @@ import {
   Loader,
   Alert,
 } from '@mantine/core'
-import { ticketsApi, usersApi } from '@/api'
+import { ticketService, userService } from '@/services'
 import { getErrorMessage } from '@/utils/errorUtils'
 import type { TicketStatsResponse, UserStatsResponse } from '@/types'
 
 export default function AdminDashboard() {
+  const navigate = useNavigate()
   const {
     data: ticketStats,
     isLoading: isLoadingTickets,
     error: ticketError,
   } = useQuery<TicketStatsResponse>({
     queryKey: ['admin', 'ticket-stats'],
-    queryFn: () => ticketsApi.getStatistics(),
+    queryFn: () => ticketService.getTicketStatistics(),
   })
 
   const {
@@ -32,7 +34,7 @@ export default function AdminDashboard() {
     error: userError,
   } = useQuery<UserStatsResponse>({
     queryKey: ['admin', 'user-stats'],
-    queryFn: () => usersApi.getStatistics(),
+    queryFn: () => userService.getUserStatistics(),
   })
 
   if (isLoadingTickets || isLoadingUsers) {
@@ -159,20 +161,16 @@ export default function AdminDashboard() {
               <Title order={3}>Quick Actions</Title>
             </Group>
             <Stack gap="sm">
-              <Button fullWidth onClick={() => (window.location.href = '/admin/users')}>
+              <Button fullWidth onClick={() => navigate({ to: '/admin/users' })}>
                 👥 Manage Users
               </Button>
-              <Button
-                fullWidth
-                variant="light"
-                onClick={() => (window.location.href = '/workflow')}
-              >
+              <Button fullWidth variant="light" onClick={() => navigate({ to: '/workflow' })}>
                 🎫 View Tickets
               </Button>
               <Button
                 fullWidth
                 variant="outline"
-                onClick={() => (window.location.href = '/admin/statistics')}
+                onClick={() => navigate({ to: '/admin/statistics' })}
               >
                 📊 View Statistics
               </Button>

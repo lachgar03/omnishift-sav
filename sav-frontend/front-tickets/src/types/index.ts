@@ -63,6 +63,27 @@ export interface UserStatsResponse {
   admins: number
 }
 
+// User Sync interfaces
+export interface TokenInfoResponse {
+  userId: string
+  username: string
+  email: string
+  roles: string[]
+  fullName: string
+  allClaims: Record<string, unknown>
+}
+
+export interface UserSyncExistsResponse {
+  exists: boolean
+  userId?: string
+}
+
+export interface UserSyncResponse {
+  success: boolean
+  message: string
+  user?: UserResponse
+}
+
 // Ticket interfaces
 export interface TicketResponse {
   id: number
@@ -76,8 +97,8 @@ export interface TicketResponse {
   createdByUserId: string
   assignedTeam?: Team
   assignedUserId?: string
-  messages: TicketMessageResponse[]
-  attachments: TicketAttachmentResponse[]
+  messages?: TicketMessageResponse[]
+  attachments?: TicketAttachmentResponse[]
 }
 
 export interface CreateTicketRequest {

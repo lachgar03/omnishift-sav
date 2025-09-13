@@ -22,6 +22,46 @@ axiosInstance.interceptors.request.use(async (config: InternalAxiosRequestConfig
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
+
+  // Proactive user sync for critical endpoints (with circuit breaker)
+  if (config.url && (config.url.includes('/tickets') || config.url.includes('/users/me'))) {
+    // Check if we've already tried user sync recently to prevent infinite loops
+    const lastSyncAttempt = sessionStorage.getItem('lastUserSyncAttempt')
+    const now = Date.now()
+    const syncCooldown = 30000 // 30 seconds cooldown
+
+    if (!lastSyncAttempt || now - parseInt(lastSyncAttempt) > syncCooldown) {
+      try {
+        // Check if user exists and sync if needed
+        const { usersApi } = await import('./users')
+        const exists = await usersApi.checkExists()
+        if (!exists.exists) {
+          console.log('User not found, proactively syncing...')
+          sessionStorage.setItem('lastUserSyncAttempt', now.toString())
+
+          try {
+            await usersApi.forceSync()
+            console.log('Proactive user sync successful')
+          } catch {
+            console.warn('Force sync failed, trying minimal user creation...')
+            try {
+              await usersApi.createMinimal()
+              console.log('Minimal user creation successful')
+            } catch (minimalError) {
+              console.warn('Minimal user creation also failed:', minimalError)
+              // Don't retry again for a while
+            }
+          }
+        }
+      } catch (syncError) {
+        console.warn('Proactive user sync failed:', syncError)
+        // Continue with request - will be handled by response interceptor
+      }
+    } else {
+      console.log('User sync cooldown active, skipping proactive sync')
+    }
+  }
+
   return config
 })
 
@@ -63,6 +103,46 @@ axiosInstance.interceptors.response.use(
       parsedError: errorResponse,
       status,
       message: errorResponse?.message || error.message,
+    }
+
+    // Handle 400 errors from user sync endpoints specifically
+    if (status === 400 && originalRequest.url && originalRequest.url.includes('/users/sync')) {
+      console.warn(
+        'User sync endpoint returned 400, stopping retry attempts to prevent infinite loop',
+      )
+      // Don't try any more user sync attempts - just return the error
+      return Promise.reject(enhancedError)
+    }
+
+    // Handle user not found errors (400/404 with user-related messages)
+    if (
+      (status === 400 || status === 404) &&
+      errorResponse?.message?.includes('user') &&
+      errorResponse?.message?.includes('not found')
+    ) {
+      console.warn('User not found, attempting to sync user...')
+      try {
+        // Import usersApi dynamically to avoid circular dependency
+        const { usersApi } = await import('./users')
+        try {
+          await usersApi.forceSync()
+          console.log('User sync successful, retrying request...')
+          return axiosInstance(originalRequest)
+        } catch {
+          console.warn('Force sync failed, trying minimal user creation...')
+          try {
+            await usersApi.createMinimal()
+            console.log('Minimal user creation successful, retrying request...')
+            return axiosInstance(originalRequest)
+          } catch (minimalError) {
+            console.error('Both force sync and minimal user creation failed:', minimalError)
+            // Continue with original error
+          }
+        }
+      } catch (syncError) {
+        console.error('Failed to sync user:', syncError)
+        // Continue with original error
+      }
     }
 
     // Log different error types for debugging with structured data

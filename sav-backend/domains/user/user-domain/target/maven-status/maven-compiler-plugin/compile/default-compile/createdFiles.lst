@@ -1,5 +1,11 @@
+com\sav\user\domain\service\EnhancedUserService$UserWorkloadStats.class
 com\sav\user\domain\service\UserService$UserStats.class
+com\sav\user\domain\service\UserSyncService.class
+com\sav\user\domain\service\EnhancedUserService$UserStats.class
 com\sav\user\domain\service\UserService.class
+com\sav\user\domain\service\UserSyncService$1.class
+com\sav\user\domain\service\EnhancedUserService$1.class
+com\sav\user\domain\service\EnhancedUserService.class
 com\sav\user\domain\entity\User.class
-com\sav\user\domain\repository\UserRepositoryPort.class
 com\sav\user\domain\entity\User$UserBuilder.class
+com\sav\user\domain\repository\UserRepositoryPort.class

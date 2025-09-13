@@ -73,11 +73,24 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, prometheus
+        include: health, info, metrics, prometheus, beans, env, configprops
       base-path: /actuator
   endpoint:
     health:
       show-details: when-authorized
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
 
   # REMOVED sav.cors configuration - let gateway handle CORS
   # No need for CORS configuration in backend when using gateway
@@ -93,6 +106,15 @@ management:
       enabled: true
       from: noreply@sav.com
 
+# OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+  show-actuator: true
+
 logging:
   level:
     root: INFO
@@ -100,8 +122,16 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
     org.hibernate.SQL: DEBUG
+    org.springframework.web: INFO
   pattern:
-    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/sav-backend.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+      total-size-cap: 1GB
 
 ---
 spring:
@@ -117,24 +147,3 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
----
-spring:
-  config:
-    activate:
-      on-profile: test
-
-  security:
-    oauth2:
-      client:
-        registration: {}
-        provider: {}
-      resourceserver: {}
-
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
-
-logging:
-  level:
-    org.springframework.security: INFO

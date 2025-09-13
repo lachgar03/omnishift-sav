@@ -4,11 +4,13 @@ import { TicketForm } from '@/components/TicketForm'
 
 export default function CreateTicketPage() {
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '1rem'
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '1rem',
+      }}
+    >
       <Stack gap="lg" style={{ maxWidth: '100%', width: '100%' }}>
         <Group gap="sm" mb="lg">
           <IconTicket size="2rem" />

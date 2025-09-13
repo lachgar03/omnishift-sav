@@ -1,8 +1,10 @@
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\controller\UserController.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\dto\UserResponse.java
+C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\service\CentralizedUserSyncService.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\mapper\UserMapper.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\dto\UpdateUserStatusRequest.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\dto\UserStatsResponse.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\dto\CreateUserRequest.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\dto\UpdateUserRoleRequest.java
+C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\controller\UserSyncController.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-api\src\main\java\com\sav\user\api\dto\UpdateUserProfileRequest.java

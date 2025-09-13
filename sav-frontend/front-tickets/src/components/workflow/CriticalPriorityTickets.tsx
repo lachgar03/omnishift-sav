@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { ticketsApi, usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
@@ -7,6 +8,7 @@ import { Priority, Team } from '@/constants/roles'
 import type { TicketResponse, UserResponse, AssignTeamRequest, AssignUserRequest } from '@/types'
 
 export default function CriticalPriorityTickets() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const {
@@ -171,6 +173,7 @@ export default function CriticalPriorityTickets() {
                   assignUserMutation.mutate({ ticketId: ticket.id, request: { userId } })
                 }
                 isUnassigned={true}
+                onViewTicket={(ticketId) => navigate({ to: `/tickets/${ticketId}` })}
               />
             ))}
           </div>
@@ -199,6 +202,7 @@ export default function CriticalPriorityTickets() {
                 onAssignTeam={() => {}}
                 onAssignUser={() => {}}
                 isUnassigned={false}
+                onViewTicket={(ticketId) => navigate({ to: `/tickets/${ticketId}` })}
               />
             ))}
           </div>
@@ -233,6 +237,7 @@ interface CriticalTicketCardProps {
   onAssignTeam: (team: Team) => void
   onAssignUser: (userId: string) => void
   isUnassigned: boolean
+  onViewTicket: (ticketId: number) => void
 }
 
 function CriticalTicketCard({
@@ -241,6 +246,7 @@ function CriticalTicketCard({
   onAssignTeam,
   onAssignUser,
   isUnassigned,
+  onViewTicket,
 }: CriticalTicketCardProps) {
   return (
     <div
@@ -494,7 +500,7 @@ function CriticalTicketCard({
             fontSize: '14px',
             fontWeight: 'bold',
           }}
-          onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
+          onClick={() => onViewTicket(ticket.id)}
         >
           VIEW CRITICAL TICKET
         </button>

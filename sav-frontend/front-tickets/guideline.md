@@ -1,614 +1,960 @@
-# SAV Backend Integration Guide
+# SAV Backend Integration Guide for React Frontend
 
-## Overview
+This guide provides comprehensive information for React frontend developers to integrate with the SAV Backend API.
 
-The SAV Backend is a modular monolith Spring Boot application designed to manage a ticketing system for customer support and service requests. It provides REST APIs for user management, ticket management, and file attachments with JWT-based authentication via Keycloak.
+## Table of Contents
 
-### Architecture
-- **Framework**: Spring Boot 3.2.5 with Java 17
-- **Architecture**: Modular monolith with Domain-Driven Design (DDD)
-- **Authentication**: OAuth2 JWT tokens via Keycloak
-- **Database**: PostgreSQL with Flyway migrations
-- **Gateway**: Spring Cloud Gateway for routing and CORS
-- **Caching**: Redis for session management
+1. [Authentication & Security](#authentication--security)
+2. [API Endpoints](#api-endpoints)
+3. [DTOs (Data Transfer Objects)](#dtos-data-transfer-objects)
+4. [Enums](#enums)
+5. [Request & Response Handling](#request--response-handling)
+6. [Special Notes](#special-notes)
 
-### Main Modules
-- **Domains**: User and Ticket bounded contexts
-- **Platform**: Gateway and Security modules
-- **Infrastructure**: Shared components and configuration
-- **Application**: Main application entry point
+---
 
-## APIs
+## Authentication & Security
 
-### Base Configuration
-- **Backend Port**: 8090
-- **Gateway Port**: 8081 (recommended entry point)
-- **Context Path**: `/api`
-- **Base URL**: `http://localhost:8081/api` (via gateway)
+### How Authentication Works
 
-### Authentication
-All endpoints require JWT Bearer token authentication except:
-- `/actuator/**` - Health and monitoring endpoints
-- `/debug/**` - Debug endpoints for development
-- `/public/**` - Public resources
+The SAV Backend uses **OAuth2 JWT tokens via Keycloak** for authentication. All API requests must include a valid JWT token in the Authorization header.
 
-### User Management APIs
+### Required Headers
 
-#### GET /api/users/me
-- **Description**: Get current user profile
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Response**: UserResponse
+```http
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+```
+
+### Role-Based Access Control
+
+The system supports three user roles:
+
+- **USER**: Basic users who can create tickets and manage their own tickets
+- **TECHNICIAN**: Support staff who can manage all tickets and users
+- **ADMIN**: Full administrative access to all resources
+
+### JWT Token Structure
+
+The JWT token contains the following claims:
+- `sub`: User ID (UUID)
+- `preferred_username`: Username
+- `email`: User email
+- `given_name`: First name
+- `family_name`: Last name
+- `name`: Full name
+- `realm_access.roles`: Array of user roles
+- `resource_access.sav-backend.roles`: Client-specific roles
+
+### Authentication Flow
+
+1. User authenticates with Keycloak
+2. Keycloak returns JWT token
+3. Frontend includes token in all API requests
+4. Backend validates token and extracts user information
+5. User is automatically created/synced in the database on first API call
+
+---
+
+## API Endpoints
+
+### Base URLs
+
+- **Backend API**: `http://localhost:8090/api`
+- **Gateway**: `http://localhost:8081/api`
+- **Swagger UI**: `http://localhost:8090/swagger-ui.html`
+
+### Ticket Management
+
+#### Create Ticket
+```http
+POST /api/tickets
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Bug in login system",
+  "description": "Users cannot login with special characters",
+  "type": "BUG",
+  "priority": "HIGH"
+}
+```
+
+**Response:**
 ```json
 {
-  "id": "string",
+  "id": 1,
+  "title": "Bug in login system",
+  "description": "Users cannot login with special characters",
+  "status": "OPEN",
+  "type": "BUG",
+  "priority": "HIGH",
+  "createdAt": "2024-01-15T10:30:00",
+  "updatedAt": "2024-01-15T10:30:00",
+  "createdByUserId": "user-uuid",
+  "assignedTeam": null,
+  "assignedUserId": null,
+  "messages": [],
+  "attachments": []
+}
+```
+
+#### Get All Tickets (Technician/Admin only)
+```http
+GET /api/tickets?page=0&size=20&sortBy=createdAt&sortDir=desc
+Authorization: Bearer <token>
+```
+
+#### Get My Tickets
+```http
+GET /api/tickets/my-tickets?page=0&size=20&sortBy=createdAt&sortDir=desc
+Authorization: Bearer <token>
+```
+
+#### Get Ticket by ID
+```http
+GET /api/tickets/{ticketId}
+Authorization: Bearer <token>
+```
+
+#### Update Ticket
+```http
+PUT /api/tickets/{ticketId}
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Updated title",
+  "description": "Updated description",
+  "status": "IN_PROGRESS",
+  "priority": "MEDIUM",
+  "assignedTeam": "SUPPORT",
+  "assignedUserId": "technician-uuid"
+}
+```
+
+#### Assign Ticket to Team (Admin only)
+```http
+PATCH /api/tickets/{ticketId}/assign-team
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "team": "SUPPORT"
+}
+```
+
+#### Assign Ticket to User (Admin only)
+```http
+PATCH /api/tickets/{ticketId}/assign-user
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "userId": "technician-uuid"
+}
+```
+
+#### Close Ticket (Technician/Admin only)
+```http
+PATCH /api/tickets/{ticketId}/close
+Authorization: Bearer <token>
+```
+
+#### Reopen Ticket (Technician/Admin only)
+```http
+PATCH /api/tickets/{ticketId}/reopen
+Authorization: Bearer <token>
+```
+
+#### Get Tickets by Status (Technician/Admin only)
+```http
+GET /api/tickets/status/{status}?page=0&size=20
+Authorization: Bearer <token>
+```
+
+#### Get Tickets by Priority (Technician/Admin only)
+```http
+GET /api/tickets/priority/{priority}
+Authorization: Bearer <token>
+```
+
+#### Get Tickets by Team (Technician/Admin only)
+```http
+GET /api/tickets/team/{team}
+Authorization: Bearer <token>
+```
+
+#### Get Dashboard Summary
+```http
+GET /api/tickets/dashboard
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "myTicketsCount": 5,
+  "assignedToMeCount": 3,
+  "myOpenTickets": 2,
+  "myInProgressTickets": 1,
+  "recentTickets": [
+    {
+      "id": 1,
+      "title": "Recent ticket",
+      "status": "OPEN",
+      "priority": "HIGH",
+      "createdAt": "2024-01-15T10:30:00"
+    }
+  ]
+}
+```
+
+#### Get Ticket Statistics (Technician/Admin only)
+```http
+GET /api/tickets/statistics
+Authorization: Bearer <token>
+```
+
+### Ticket Messages
+
+#### Add Message to Ticket
+```http
+POST /api/tickets/{ticketId}/messages
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "content": "This is a message about the ticket"
+}
+```
+
+#### Get Ticket Messages
+```http
+GET /api/tickets/{ticketId}/messages
+Authorization: Bearer <token>
+```
+
+#### Delete Message (Technician/Admin only)
+```http
+DELETE /api/tickets/{ticketId}/messages/{messageId}
+Authorization: Bearer <token>
+```
+
+### Ticket Attachments
+
+#### Upload Attachment
+```http
+POST /api/tickets/{ticketId}/attachments
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+file: <file>
+```
+
+#### Get Ticket Attachments
+```http
+GET /api/tickets/{ticketId}/attachments
+Authorization: Bearer <token>
+```
+
+#### Download Attachment
+```http
+GET /api/tickets/{ticketId}/attachments/{attachmentId}/download
+Authorization: Bearer <token>
+```
+
+#### Delete Attachment (Technician/Admin only)
+```http
+DELETE /api/tickets/{ticketId}/attachments/{attachmentId}
+Authorization: Bearer <token>
+```
+
+### User Management
+
+#### Get Current User Profile
+```http
+GET /api/users/me
+Authorization: Bearer <token>
+```
+
+#### Update Current User Profile
+```http
+PUT /api/users/me
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "phoneNumber": "+1234567890",
+  "company": "Acme Corp",
+  "department": "IT"
+}
+```
+
+#### Get All Users (Technician/Admin only)
+```http
+GET /api/users
+Authorization: Bearer <token>
+```
+
+#### Get User by ID (Technician/Admin only)
+```http
+GET /api/users/{userId}
+Authorization: Bearer <token>
+```
+
+#### Create User (Admin only)
+```http
+POST /api/users
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "phoneNumber": "+1234567890",
+  "role": "USER",
+  "company": "Acme Corp",
+  "department": "IT"
+}
+```
+
+#### Get Available Technicians (Technician/Admin only)
+```http
+GET /api/users/technicians
+Authorization: Bearer <token>
+```
+
+#### Get Users by Role (Admin only)
+```http
+GET /api/users/role/{role}
+Authorization: Bearer <token>
+```
+
+#### Update User Role (Admin only)
+```http
+PUT /api/users/{userId}/role
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "role": "TECHNICIAN"
+}
+```
+
+#### Update User Status (Admin only)
+```http
+PUT /api/users/{userId}/status
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "status": "ACTIVE"
+}
+```
+
+#### Activate User (Admin only)
+```http
+PATCH /api/users/{userId}/activate
+Authorization: Bearer <token>
+```
+
+#### Deactivate User (Admin only)
+```http
+PATCH /api/users/{userId}/deactivate
+Authorization: Bearer <token>
+```
+
+#### Get Users by Status (Admin only)
+```http
+GET /api/users/status/{status}
+Authorization: Bearer <token>
+```
+
+#### Search User by Username (Technician/Admin only)
+```http
+GET /api/users/search?username=johndoe
+Authorization: Bearer <token>
+```
+
+#### Get User Statistics (Admin only)
+```http
+GET /api/users/statistics
+Authorization: Bearer <token>
+```
+
+---
+
+## DTOs (Data Transfer Objects)
+
+### Ticket DTOs
+
+#### CreateTicketRequest
+```json
+{
+  "title": "string (3-255 chars, required)",
+  "description": "string (max 2000 chars, optional)",
+  "type": "BUG | FEATURE_REQUEST | ASSISTANCE | INCIDENT | RECLAMATION | RELANCE",
+  "priority": "LOW | MEDIUM | HIGH | CRITICAL"
+}
+```
+
+#### UpdateTicketRequest
+```json
+{
+  "title": "string (optional)",
+  "description": "string (optional)",
+  "status": "OPEN | ASSIGNED | IN_PROGRESS | RESOLVED | REOPENED | CLOSED",
+  "priority": "LOW | MEDIUM | HIGH | CRITICAL",
+  "assignedTeam": "SUPPORT | DEVELOPMENT",
+  "assignedUserId": "string (UUID, optional)"
+}
+```
+
+#### UpdateMyTicketRequest
+```json
+{
+  "title": "string (optional)",
+  "description": "string (optional)"
+}
+```
+
+#### TicketResponse
+```json
+{
+  "id": "number",
+  "title": "string",
+  "description": "string",
+  "status": "OPEN | ASSIGNED | IN_PROGRESS | RESOLVED | REOPENED | CLOSED",
+  "type": "BUG | FEATURE_REQUEST | ASSISTANCE | INCIDENT | RECLAMATION | RELANCE",
+  "priority": "LOW | MEDIUM | HIGH | CRITICAL",
+  "createdAt": "string (ISO 8601 datetime)",
+  "updatedAt": "string (ISO 8601 datetime)",
+  "createdByUserId": "string (UUID)",
+  "assignedTeam": "SUPPORT | DEVELOPMENT | null",
+  "assignedUserId": "string (UUID) | null",
+  "messages": "TicketMessageResponse[]",
+  "attachments": "TicketAttachmentResponse[]"
+}
+```
+
+#### CreateTicketMessageRequest
+```json
+{
+  "content": "string (required, max 10000 chars)"
+}
+```
+
+#### TicketMessageResponse
+```json
+{
+  "id": "number",
+  "content": "string",
+  "createdAt": "string (ISO 8601 datetime)",
+  "authorId": "string (UUID)"
+}
+```
+
+#### TicketAttachmentResponse
+```json
+{
+  "id": "number",
+  "filename": "string",
+  "fileUrl": "string",
+  "uploadedAt": "string (ISO 8601 datetime)",
+  "uploadedByUserId": "string (UUID)"
+}
+```
+
+#### AssignTeamRequest
+```json
+{
+  "team": "SUPPORT | DEVELOPMENT"
+}
+```
+
+#### AssignUserRequest
+```json
+{
+  "userId": "string (UUID)"
+}
+```
+
+#### DashboardResponse
+```json
+{
+  "myTicketsCount": "number",
+  "assignedToMeCount": "number",
+  "myOpenTickets": "number",
+  "myInProgressTickets": "number",
+  "recentTickets": "TicketResponse[]",
+  "globalStats": "TicketStatsResponse (optional)",
+  "urgentTickets": "TicketResponse[] (optional)",
+  "unassignedTickets": "TicketResponse[] (optional)"
+}
+```
+
+#### TicketStatsResponse
+```json
+{
+  "totalTickets": "number",
+  "openTickets": "number",
+  "inProgressTickets": "number",
+  "assignedTickets": "number",
+  "closedTickets": "number",
+  "resolvedTickets": "number",
+  "reopenedTickets": "number"
+}
+```
+
+### User DTOs
+
+#### CreateUserRequest
+```json
+{
+  "username": "string (required)",
+  "firstName": "string (required)",
+  "lastName": "string (required)",
+  "email": "string (required, valid email)",
+  "phoneNumber": "string (optional)",
+  "role": "USER | TECHNICIAN | ADMIN",
+  "company": "string (optional)",
+  "department": "string (optional)"
+}
+```
+
+#### UpdateUserProfileRequest
+```json
+{
+  "firstName": "string (optional)",
+  "lastName": "string (optional)",
+  "phoneNumber": "string (optional)",
+  "company": "string (optional)",
+  "department": "string (optional)"
+}
+```
+
+#### UpdateUserRoleRequest
+```json
+{
+  "role": "USER | TECHNICIAN | ADMIN"
+}
+```
+
+#### UpdateUserStatusRequest
+```json
+{
+  "status": "ACTIVE | INACTIVE | SUSPENDED | PENDING_ACTIVATION"
+}
+```
+
+#### UserResponse
+```json
+{
+  "id": "string (UUID)",
   "username": "string",
   "firstName": "string",
   "lastName": "string",
   "fullName": "string",
   "email": "string",
-  "phoneNumber": "string",
-  "role": "USER|TECHNICIAN|ADMIN",
-  "status": "ACTIVE|INACTIVE|SUSPENDED|PENDING_ACTIVATION",
-  "company": "string",
-  "department": "string",
-  "createdAt": "2024-01-01T10:00:00",
-  "updatedAt": "2024-01-01T10:00:00"
+  "phoneNumber": "string | null",
+  "role": "USER | TECHNICIAN | ADMIN",
+  "status": "ACTIVE | INACTIVE | SUSPENDED | PENDING_ACTIVATION",
+  "company": "string | null",
+  "department": "string | null",
+  "createdAt": "string (ISO 8601 datetime)",
+  "updatedAt": "string (ISO 8601 datetime)"
 }
 ```
 
-#### PUT /api/users/me
-- **Description**: Update current user profile
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Request**: UpdateUserProfileRequest
+#### UserStatsResponse
 ```json
 {
-  "firstName": "string",
-  "lastName": "string",
-  "phoneNumber": "string",
-  "company": "string",
-  "department": "string",
-  "email": "valid-email@domain.com"
+  "totalUsers": "number",
+  "activeUsers": "number",
+  "inactiveUsers": "number",
+  "suspendedUsers": "number",
+  "pendingUsers": "number",
+  "adminUsers": "number",
+  "technicianUsers": "number",
+  "regularUsers": "number"
 }
 ```
-- **Response**: UserResponse
 
-#### POST /api/users
-- **Description**: Create new user (Admin only)
-- **Authorization**: ADMIN
-- **Request**: CreateUserRequest
+### Error DTOs
+
+#### ErrorResponse
 ```json
 {
-  "username": "string",
-  "firstName": "string",
-  "lastName": "string",
-  "email": "valid-email@domain.com",
-  "phoneNumber": "string",
-  "role": "USER|TECHNICIAN|ADMIN",
-  "company": "string",
-  "department": "string"
+  "timestamp": "string (ISO 8601 datetime)",
+  "status": "number (HTTP status code)",
+  "error": "string (error type)",
+  "message": "string (error message)",
+  "path": "string (request path)"
 }
 ```
-- **Response**: UserResponse (201 Created)
 
-#### GET /api/users
-- **Description**: Get all active users
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: List<UserResponse>
-
-#### GET /api/users/{userId}
-- **Description**: Get user by ID
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: UserResponse
-
-#### GET /api/users/technicians
-- **Description**: Get available technicians
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: List<UserResponse>
-
-#### GET /api/users/role/{role}
-- **Description**: Get users by role
-- **Authorization**: ADMIN
-- **Response**: List<UserResponse>
-
-#### PUT /api/users/{userId}/role
-- **Description**: Update user role
-- **Authorization**: ADMIN
-- **Request**: UpdateUserRoleRequest
+#### ValidationErrorResponse
 ```json
 {
-  "role": "USER|TECHNICIAN|ADMIN"
+  "timestamp": "string (ISO 8601 datetime)",
+  "status": "number (HTTP status code)",
+  "error": "string (error type)",
+  "message": "string (error message)",
+  "validationErrors": {
+    "fieldName": "error message",
+    "anotherField": "error message"
+  }
 }
 ```
 
-#### PUT /api/users/{userId}/status
-- **Description**: Update user status
-- **Authorization**: ADMIN
-- **Request**: UpdateUserStatusRequest
-```json
-{
-  "status": "ACTIVE|INACTIVE|SUSPENDED|PENDING_ACTIVATION"
-}
-```
-
-#### GET /api/users/statistics
-- **Description**: Get user statistics
-- **Authorization**: ADMIN
-- **Response**: UserStatsResponse
-
-#### PATCH /api/users/{userId}/activate
-- **Description**: Activate user
-- **Authorization**: ADMIN
-- **Response**: UserResponse
-
-#### PATCH /api/users/{userId}/deactivate
-- **Description**: Deactivate user
-- **Authorization**: ADMIN
-- **Response**: UserResponse
-
-#### GET /api/users/status/{status}
-- **Description**: Get users by status
-- **Authorization**: ADMIN
-- **Response**: List<UserResponse>
-
-#### GET /api/users/search?username={username}
-- **Description**: Search user by username
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: UserResponse
-
-### Ticket Management APIs
-
-#### POST /api/tickets
-- **Description**: Create a new ticket
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Request**: CreateTicketRequest
-```json
-{
-  "title": "string",
-  "description": "string",
-  "type": "BUG|FEATURE_REQUEST|ASSISTANCE|INCIDENT|RECLAMATION|RELANCE",
-  "priority": "LOW|MEDIUM|HIGH|CRITICAL"
-}
-```
-- **Response**: TicketResponse (201 Created)
-
-#### GET /api/tickets
-- **Description**: Get all tickets with pagination
-- **Authorization**: TECHNICIAN, ADMIN
-- **Query Parameters**:
-  - `page` (default: 0)
-  - `size` (default: 20)
-  - `sortBy` (default: "createdAt")
-  - `sortDir` (default: "desc")
-- **Response**: Page<TicketResponse>
-
-#### GET /api/tickets/{ticketId}
-- **Description**: Get ticket by ID with messages
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Response**: TicketResponse
-
-#### PUT /api/tickets/{ticketId}
-- **Description**: Update ticket
-- **Authorization**: TECHNICIAN, ADMIN
-- **Request**: UpdateTicketRequest
-```json
-{
-  "title": "string",
-  "description": "string",
-  "status": "OPEN|ASSIGNED|IN_PROGRESS|RESOLVED|REOPENED|CLOSED",
-  "priority": "LOW|MEDIUM|HIGH|CRITICAL",
-  "assignedTeam": "SUPPORT|DEVELOPMENT",
-  "assignedUserId": "string"
-}
-```
-
-#### PATCH /api/tickets/{ticketId}/assign-team
-- **Description**: Assign ticket to team
-- **Authorization**: ADMIN
-- **Request**: AssignTeamRequest
-```json
-{
-  "team": "SUPPORT|DEVELOPMENT"
-}
-```
-
-#### PATCH /api/tickets/{ticketId}/assign-user
-- **Description**: Assign ticket to user
-- **Authorization**: ADMIN
-- **Request**: AssignUserRequest
-```json
-{
-  "userId": "string"
-}
-```
-
-#### PATCH /api/tickets/{ticketId}/close
-- **Description**: Close ticket
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: TicketResponse
-
-#### PATCH /api/tickets/{ticketId}/reopen
-- **Description**: Reopen closed ticket
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: TicketResponse
-
-#### GET /api/tickets/my-tickets
-- **Description**: Get current user's tickets
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Response**: List<TicketResponse>
-
-#### GET /api/tickets/assigned-to-me
-- **Description**: Get tickets assigned to current user
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: List<TicketResponse>
-
-#### GET /api/tickets/status/{status}
-- **Description**: Get tickets by status with pagination
-- **Authorization**: TECHNICIAN, ADMIN
-- **Query Parameters**: `page`, `size`
-- **Response**: Page<TicketResponse>
-
-#### GET /api/tickets/priority/{priority}
-- **Description**: Get tickets by priority
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: List<TicketResponse>
-
-#### GET /api/tickets/team/{team}
-- **Description**: Get tickets by team
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: List<TicketResponse>
-
-#### GET /api/tickets/statistics
-- **Description**: Get ticket statistics
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: TicketStatsResponse
-```json
-{
-  "totalTickets": 0,
-  "openTickets": 0,
-  "inProgressTickets": 0,
-  "assignedTickets": 0,
-  "closedTickets": 0
-}
-```
-
-#### GET /api/tickets/dashboard
-- **Description**: Get dashboard summary for current user
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Response**: DashboardResponse
-```json
-{
-  "myTicketsCount": 0,
-  "assignedToMeCount": 0,
-  "myOpenTickets": 0,
-  "myInProgressTickets": 0,
-  "recentTickets": [...]
-}
-```
-
-### Ticket Message APIs
-
-#### POST /api/tickets/{ticketId}/messages
-- **Description**: Add message to ticket
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Request**: CreateTicketMessageRequest
-```json
-{
-  "content": "string"
-}
-```
-- **Response**: TicketMessageResponse (201 Created)
-
-#### GET /api/tickets/{ticketId}/messages
-- **Description**: Get all messages for ticket
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Response**: List<TicketMessageResponse>
-
-#### DELETE /api/tickets/{ticketId}/messages/{messageId}
-- **Description**: Delete message
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: 204 No Content
-
-### Ticket Attachment APIs
-
-#### POST /api/tickets/{ticketId}/attachments
-- **Description**: Upload attachment to ticket
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Request**: Multipart file upload
-- **Response**: TicketAttachmentResponse (201 Created)
-
-#### GET /api/tickets/{ticketId}/attachments
-- **Description**: Get all attachments for ticket
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Response**: List<TicketAttachmentResponse>
-
-#### DELETE /api/tickets/{ticketId}/attachments/{attachmentId}
-- **Description**: Delete attachment
-- **Authorization**: TECHNICIAN, ADMIN
-- **Response**: 204 No Content
-
-#### GET /api/tickets/{ticketId}/attachments/{attachmentId}/download
-- **Description**: Download attachment
-- **Authorization**: USER, TECHNICIAN, ADMIN
-- **Response**: File download URL
-
-### Debug APIs (Development Only)
-
-#### GET /api/debug/token-info
-- **Description**: Get JWT token information for debugging
-- **Authorization**: None required
-- **Response**: Token claims and authentication details
-
-## Data Models
-
-### User Entity
-```json
-{
-  "id": "string (UUID)",
-  "username": "string (unique)",
-  "firstName": "string",
-  "lastName": "string",
-  "email": "string (unique)",
-  "phoneNumber": "string",
-  "role": "UserRole enum",
-  "status": "UserStatus enum",
-  "company": "string",
-  "department": "string",
-  "createdAt": "LocalDateTime",
-  "updatedAt": "LocalDateTime"
-}
-```
-
-### Ticket Entity
-```json
-{
-  "id": "Long",
-  "title": "string",
-  "description": "string",
-  "status": "TicketStatus enum",
-  "type": "TicketType enum",
-  "priority": "Priority enum",
-  "createdAt": "LocalDateTime",
-  "updatedAt": "LocalDateTime",
-  "createdByUserId": "string",
-  "assignedTeam": "Team enum",
-  "assignedUserId": "string",
-  "messages": "List<TicketMessage>",
-  "attachments": "List<TicketAttachment>"
-}
-```
-
-### TicketMessage Entity
-```json
-{
-  "id": "Long",
-  "content": "string",
-  "createdAt": "LocalDateTime",
-  "authorId": "string",
-  "ticket": "Ticket"
-}
-```
-
-### TicketAttachment Entity
-```json
-{
-  "id": "Long",
-  "filename": "string",
-  "fileUrl": "string",
-  "uploadedAt": "LocalDateTime",
-  "ticket": "Ticket"
-}
-```
+---
 
 ## Enums
 
 ### UserRole
-- `USER` - Regular user who can create tickets
-- `TECHNICIAN` - Support technician who can manage tickets
-- `ADMIN` - Administrator with full system access
+- `USER`: Basic user role
+- `TECHNICIAN`: Support technician role
+- `ADMIN`: Administrator role
 
 ### UserStatus
-- `ACTIVE` - User is active and can use the system
-- `INACTIVE` - User is temporarily inactive
-- `SUSPENDED` - User is suspended
-- `PENDING_ACTIVATION` - User registration is pending approval
+- `ACTIVE`: User is active and can use the system
+- `INACTIVE`: User is inactive and cannot use the system
+- `SUSPENDED`: User is suspended temporarily
+- `PENDING_ACTIVATION`: User is waiting for activation
 
 ### TicketStatus
-- `OPEN` - Newly created ticket
-- `ASSIGNED` - Ticket assigned to team/user
-- `IN_PROGRESS` - Work in progress
-- `RESOLVED` - Issue resolved, awaiting confirmation
-- `REOPENED` - Previously closed ticket reopened
-- `CLOSED` - Ticket completely closed
+- `OPEN`: Ticket is newly created and open
+- `ASSIGNED`: Ticket has been assigned to a team or user
+- `IN_PROGRESS`: Ticket is being worked on
+- `RESOLVED`: Ticket has been resolved
+- `REOPENED`: Ticket was closed but reopened
+- `CLOSED`: Ticket is closed and completed
 
 ### TicketType
-- `BUG` - Software bug report
-- `FEATURE_REQUEST` - New feature request
-- `ASSISTANCE` - User needs help/support
-- `INCIDENT` - System incident
-- `RECLAMATION` - Complaint or claim
-- `RELANCE` - Follow-up request
+- `BUG`: Bug report
+- `FEATURE_REQUEST`: Request for new feature
+- `ASSISTANCE`: General assistance request
+- `INCIDENT`: System incident
+- `RECLAMATION`: Complaint or reclamation
+- `RELANCE`: Follow-up request
 
 ### Priority
-- `LOW` - Low priority
-- `MEDIUM` - Medium priority
-- `HIGH` - High priority
-- `CRITICAL` - Critical priority
+- `LOW`: Low priority
+- `MEDIUM`: Medium priority
+- `HIGH`: High priority
+- `CRITICAL`: Critical priority
 
 ### Team
-- `SUPPORT` - Customer support team
-- `DEVELOPMENT` - Development team
+- `SUPPORT`: Support team
+- `DEVELOPMENT`: Development team
 
-## Configuration Details
+---
 
-### CORS Settings (Gateway)
-- **Allowed Origins**: 
-  - `http://localhost:3000` (React frontend)
-  - `http://127.0.0.1:3000`
-- **Allowed Methods**: GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD
-- **Allowed Headers**: `*`
-- **Exposed Headers**: Authorization, Content-Type, Accept, Location
-- **Allow Credentials**: true
-- **Max Age**: 3600 seconds
+## Request & Response Handling
 
-### Database Configuration
-- **Type**: PostgreSQL
-- **Host**: localhost:5432
-- **Database**: postgres
-- **Username**: admin
-- **Password**: admin123
-- **Connection Pool**: HikariCP (max 20 connections)
+### Standard Request Headers
 
-### Authentication Configuration
-- **Provider**: Keycloak OAuth2 JWT
-- **Issuer URI**: `http://localhost:8180/realms/sav-realm`
-- **Session Management**: Stateless
-- **JWT Claims**: 
-  - Subject (sub) used as user ID
-  - Roles extracted from `realm_access.roles` or `resource_access.sav-backend.roles`
-
-### Caching Configuration
-- **Provider**: Redis
-- **Host**: localhost:6379
-- **Pool**: Jedis (max 8 connections)
-
-## Docker Setup
-
-### Services (docker-compose.yml)
-
-#### PostgreSQL Database
-- **Container**: sav-postgres
-- **Image**: postgres:15-alpine
-- **Port**: 5432
-- **Environment**:
-  - POSTGRES_USER: admin
-  - POSTGRES_PASSWORD: admin123
-  - POSTGRES_DB: postgres
-- **Volume**: postgres_data
-
-#### PgAdmin
-- **Container**: sav-pgadmin
-- **Image**: dpage/pgadmin4:latest
-- **Port**: 8082
-- **Credentials**: admin@sav.com / admin123
-
-#### Keycloak
-- **Container**: sav-keycloak
-- **Image**: quay.io/keycloak/keycloak:23.0
-- **Ports**: 8180 (HTTP), 8543 (HTTPS)
-- **Admin Credentials**: admin / admin123
-- **Database**: Uses PostgreSQL
-
-#### Redis
-- **Container**: sav-redis
-- **Image**: redis:7-alpine
-- **Port**: 6379
-
-#### MailHog (Email Testing)
-- **Container**: sav-mailhog
-- **Image**: mailhog/mailhog:latest
-- **Ports**: 1025 (SMTP), 8025 (Web UI)
-
-### Network
-- **Name**: sav-network
-- **Driver**: bridge
-
-## Integration Guidelines
-
-### Frontend Integration
-
-#### Authentication Flow
-1. Redirect users to Keycloak for authentication
-2. Obtain JWT token from Keycloak
-3. Include token in all API requests: `Authorization: Bearer <token>`
-4. Handle token refresh as needed
-
-#### Required Headers
-```
-Authorization: Bearer <jwt-token>
+```http
+Authorization: Bearer <jwt_token>
 Content-Type: application/json
 Accept: application/json
 ```
 
-#### Error Handling
-Errors follow standard HTTP status codes:
-- **400 Bad Request**: Invalid request data
-- **401 Unauthorized**: Missing or invalid authentication
-- **403 Forbidden**: Insufficient permissions
+### Standard Response Format
+
+All successful responses follow this pattern:
+- **200 OK**: Successful GET, PUT, PATCH requests
+- **201 Created**: Successful POST requests
+- **204 No Content**: Successful DELETE requests
+
+### Error Handling
+
+The API returns structured error responses with the following HTTP status codes:
+
+- **400 Bad Request**: Invalid request data or validation errors
+- **401 Unauthorized**: Missing or invalid authentication token
+- **403 Forbidden**: User lacks permission for the requested action
 - **404 Not Found**: Resource not found
-- **422 Unprocessable Entity**: Validation errors
-- **500 Internal Server Error**: Server error
+- **409 Conflict**: Data integrity violation
+- **422 Unprocessable Entity**: Validation errors with detailed field information
+- **500 Internal Server Error**: Unexpected server error
+- **503 Service Unavailable**: Database or external service unavailable
 
-#### Validation Rules
-- Email fields must be valid email format
-- Required fields are marked with `@NotNull` or `@NotBlank`
-- Enum values must match exactly (case-sensitive)
-- File uploads use multipart/form-data
+### Error Response Examples
 
-### External Service Integration
+#### Validation Error (400)
+```json
+{
+  "timestamp": "2024-01-15T10:30:00",
+  "status": 400,
+  "error": "Validation Failed",
+  "message": "Request validation failed",
+  "validationErrors": {
+    "title": "Title is required",
+    "email": "Valid email is required"
+  }
+}
+```
 
-#### Keycloak Configuration
-1. Create realm: `sav-realm`
-2. Create client: `sav-backend`
-3. Configure client roles: USER, TECHNICIAN, ADMIN
-4. Set JWT issuer URI in application configuration
+#### Unauthorized (401)
+```json
+{
+  "timestamp": "2024-01-15T10:30:00",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Authentication failed",
+  "path": "/api/tickets"
+}
+```
 
-#### File Storage Integration
-- Current implementation uses placeholder URLs
-- Recommended: Integrate with cloud storage (AWS S3, Azure Blob, etc.)
-- Update `TicketAttachmentService` for production file handling
+#### Forbidden (403)
+```json
+{
+  "timestamp": "2024-01-15T10:30:00",
+  "status": 403,
+  "error": "Forbidden",
+  "message": "Access denied",
+  "path": "/api/users"
+}
+```
 
-#### Email Notifications
-- Configured to use MailHog for development
-- Production: Configure SMTP settings in application.yml
-- Email templates can be added to resources/templates
+#### Not Found (404)
+```json
+{
+  "timestamp": "2024-01-15T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Ticket not found",
+  "path": "/api/tickets/999"
+}
+```
 
-### Monitoring and Health Checks
+### Pagination
 
-#### Actuator Endpoints
-- **Health**: `/actuator/health`
-- **Info**: `/actuator/info`
-- **Metrics**: `/actuator/metrics`
-- **Prometheus**: `/actuator/prometheus`
+List endpoints support pagination with the following query parameters:
 
-#### Gateway Routes
-- Backend API: All `/api/**` routes forwarded to backend
-- Actuator: `/actuator/**` routes forwarded to backend
-- Fallback: All other routes prefixed with `/api` and forwarded
+- `page`: Page number (0-based, default: 0)
+- `size`: Number of items per page (default: 20)
+- `sortBy`: Field to sort by (default: "createdAt")
+- `sortDir`: Sort direction - "asc" or "desc" (default: "desc")
 
-## Technical Notes
+**Example:**
+```http
+GET /api/tickets?page=0&size=10&sortBy=priority&sortDir=asc
+```
 
-### Security
-- CSRF disabled (stateless JWT authentication)
-- CORS handled at gateway level
-- Method-level security with `@PreAuthorize`
-- JWT token validation with role-based access control
+**Paginated Response:**
+```json
+{
+  "content": [...],
+  "pageable": {
+    "sort": {
+      "sorted": true,
+      "unsorted": false
+    },
+    "pageNumber": 0,
+    "pageSize": 10,
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+  },
+  "totalElements": 50,
+  "totalPages": 5,
+  "last": false,
+  "first": true,
+  "numberOfElements": 10,
+  "size": 10,
+  "number": 0,
+  "sort": {
+    "sorted": true,
+    "unsorted": false
+  }
+}
+```
 
-### Database Migrations
-- Flyway manages database schema
-- Migration files in `src/main/resources/db/migration/`
-- Automatic execution on application startup
+### Token Refresh Logic
 
-### Business Rules
-- Users can only view/edit their own tickets (except TECHNICIAN/ADMIN)
-- Only ADMIN can assign tickets to teams/users
-- Only TECHNICIAN/ADMIN can close/reopen tickets
-- File attachments stored with metadata only (URLs)
+When a JWT token expires (401 Unauthorized response), the frontend should:
 
-### Logging
-- SLF4J with Logback
-- DEBUG level for security and SQL
-- Structured console logging pattern
-- Request/response logging for authentication flows
+1. Redirect user to Keycloak login
+2. Obtain new JWT token
+3. Retry the original request with new token
+4. Update stored token in localStorage/sessionStorage
 
-### Performance Considerations
-- Database indexes on frequently queried columns
-- Lazy loading for entity relationships
-- Pagination for large result sets
-- Connection pooling with HikariCP
-- Redis caching for session data
+### Retry Logic
+
+For transient errors (5xx), implement exponential backoff:
+
+```javascript
+const retryRequest = async (requestFn, maxRetries = 3) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await requestFn();
+    } catch (error) {
+      if (error.status >= 500 && i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+```
+
+---
+
+## Special Notes
+
+### Pagination Strategy
+
+- All list endpoints support pagination
+- Default page size is 20 items
+- Maximum page size should be limited to 100 items
+- Use `totalElements` and `totalPages` for pagination UI
+- Sort parameters are case-sensitive
+
+### Sorting/Filtering Conventions
+
+- Sort fields use camelCase (e.g., `createdAt`, `updatedAt`)
+- Sort direction: `asc` or `desc` (case-insensitive)
+- Filtering is done via query parameters
+- Date filters use ISO 8601 format
+
+### File Upload/Download Handling
+
+#### File Upload
+- Maximum file size: 10MB
+- Allowed file types: PDF, DOC, DOCX, TXT, RTF, ODT, JPG, JPEG, PNG, GIF, BMP, WEBP, XLS, XLSX, CSV, ODS, ZIP, RAR, 7Z, TAR, GZ, LOG, XML, JSON
+- Use `multipart/form-data` content type
+- File parameter name: `file`
+
+#### File Download
+- Download endpoint returns file URL or stream
+- Implement proper file access validation
+- Consider implementing signed URLs for security
+
+### CORS Configuration
+
+- CORS is handled by the Spring Cloud Gateway
+- Allowed origins should be configured in gateway settings
+- Preflight requests are automatically handled
+
+### Rate Limiting
+
+- Consider implementing rate limiting for production
+- Monitor API usage and implement appropriate limits
+- Use HTTP 429 (Too Many Requests) for rate limit exceeded
+
+### WebSocket Support
+
+- Currently not implemented
+- Consider WebSocket for real-time ticket updates
+- Could be added for live notifications
+
+### API Versioning
+
+- Current API version: v1 (implicit)
+- Consider adding versioning for future breaking changes
+- Use URL path versioning: `/api/v1/tickets`
+
+### Monitoring and Logging
+
+- All requests are logged with trace IDs
+- Use trace ID for debugging: `X-Trace-Id` header
+- Monitor API performance and error rates
+- Health check endpoint: `/actuator/health`
+
+### Security Considerations
+
+- Always validate file uploads on frontend
+- Sanitize user input before display
+- Implement proper error handling to avoid information leakage
+- Use HTTPS in production
+- Implement proper session management
 
 ### Development vs Production
-- Development profile enables SQL logging and relaxed security
-- Test profile disables OAuth2 for testing
-- Production profile should use external configuration
-- Environment-specific application.yml profiles included
+
+- Development uses seeded data
+- Production requires proper Keycloak configuration
+- Database migrations are handled automatically
+- Environment-specific configurations are managed via Spring profiles
+
+---
+
+## Quick Start for React Integration
+
+### 1. Install Dependencies
+
+```bash
+npm install axios
+# or
+yarn add axios
+```
+
+### 2. Create API Client
+
+```javascript
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:8090/api';
+
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add request interceptor to include JWT token
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('jwt_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Add response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle token expiration
+      localStorage.removeItem('jwt_token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+```
+
+### 3. Example API Calls
+
+```javascript
+// Get current user
+const getCurrentUser = async () => {
+  const response = await apiClient.get('/users/me');
+  return response.data;
+};
+
+// Create ticket
+const createTicket = async (ticketData) => {
+  const response = await apiClient.post('/tickets', ticketData);
+  return response.data;
+};
+
+// Get tickets with pagination
+const getTickets = async (page = 0, size = 20) => {
+  const response = await apiClient.get(`/tickets?page=${page}&size=${size}`);
+  return response.data;
+};
+```
+
+This integration guide provides everything needed to successfully integrate a React frontend with the SAV Backend API. For additional support or questions, refer to the Swagger UI documentation at `http://localhost:8090/swagger-ui.html`.

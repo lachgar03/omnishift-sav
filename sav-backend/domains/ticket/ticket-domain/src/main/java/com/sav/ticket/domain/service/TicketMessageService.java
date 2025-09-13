@@ -1,6 +1,5 @@
 package com.sav.ticket.domain.service;
 
-import com.sav.ticket.domain.entity.Ticket;
 import com.sav.ticket.domain.entity.TicketMessage;
 import com.sav.ticket.domain.repository.TicketRepositoryPort;
 import com.sav.ticket.domain.repository.TicketMessageRepositoryPort;

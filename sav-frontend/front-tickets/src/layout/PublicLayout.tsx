@@ -1,10 +1,13 @@
 import { Outlet } from '@tanstack/react-router'
-import { Container } from '@mantine/core'
+import { Container, Box } from '@mantine/core'
 
 export default function PublicLayout() {
+  console.log('PublicLayout rendering')
   return (
-    <Container size="xs" pt="xl">
-      <Outlet />
-    </Container>
+    <Box style={{ minHeight: '100vh', width: '100%' }}>
+      <Container size="xs" pt="xl">
+        <Outlet />
+      </Container>
+    </Box>
   )
 }

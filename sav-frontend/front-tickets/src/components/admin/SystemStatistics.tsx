@@ -187,12 +187,7 @@ export default function SystemStatistics() {
                 <Text size="sm" c="dimmed" mb="xs">
                   Activity Rate: {calculateUserActivityRate()}%
                 </Text>
-                <Progress
-                  value={calculateUserActivityRate()}
-                  color="green"
-                  size="sm"
-                  radius="md"
-                />
+                <Progress value={calculateUserActivityRate()} color="green" size="sm" radius="md" />
               </Box>
             )}
           </Stack>
@@ -231,15 +226,21 @@ export default function SystemStatistics() {
             <Title order={3}>System Health</Title>
             <Stack gap="sm">
               <Group>
-                <Badge color="green" size="sm">Operational</Badge>
+                <Badge color="green" size="sm">
+                  Operational
+                </Badge>
                 <Text size="sm">Backend Service</Text>
               </Group>
               <Group>
-                <Badge color="green" size="sm">Active</Badge>
+                <Badge color="green" size="sm">
+                  Active
+                </Badge>
                 <Text size="sm">Authentication</Text>
               </Group>
               <Group>
-                <Badge color="green" size="sm">Connected</Badge>
+                <Badge color="green" size="sm">
+                  Connected
+                </Badge>
                 <Text size="sm">Database</Text>
               </Group>
               <Divider />

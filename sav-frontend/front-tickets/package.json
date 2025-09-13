@@ -1,5 +1,5 @@
 {
-  "name": "front-tickets",
+  "name": "sav-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -37,6 +38,8 @@
     "@types/react-dom": "^19.1.7",
     "@types/yup": "^0.32.0",
     "@vitejs/plugin-react": "^5.0.1",
+    "@tanstack/react-router-devtools": "^1.131.27",
+    "@tanstack/router-vite-plugin": "^1.131.27",
     "eslint": "^9.33.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

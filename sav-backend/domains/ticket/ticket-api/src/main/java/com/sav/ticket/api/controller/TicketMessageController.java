@@ -58,29 +58,6 @@ public class TicketMessageController {
         return canAccess;
     }
 
-    /**
-     * Validate message content for security and business rules
-     */
-    private boolean isValidMessageContent(String content) {
-        if (content == null || content.trim().isEmpty()) {
-            return false;
-        }
-
-        // Check message length limits
-        if (content.length() > 10000) { // 10K character limit
-            return false;
-        }
-
-        // Basic content validation - could be extended with more sophisticated filtering
-        String trimmedContent = content.trim();
-
-        // Prevent messages that are just whitespace or special characters
-        if (trimmedContent.matches("^[\\s\\p{Punct}]*$")) {
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * Add a message to a ticket
@@ -190,25 +167,75 @@ public class TicketMessageController {
     }
 
     /**
+     * Enhanced message content validation and sanitization
+     */
+    private boolean isValidMessageContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return false;
+        }
+
+        // Check message length limits
+        if (content.length() > 10000) { // 10K character limit
+            return false;
+        }
+
+        // Basic content validation
+        String trimmedContent = content.trim();
+
+        // Prevent messages that are just whitespace or special characters
+        if (trimmedContent.matches("^[\\s\\p{Punct}]*$")) {
+            return false;
+        }
+
+        // Check for potential XSS patterns
+        String lowerContent = trimmedContent.toLowerCase();
+        if (lowerContent.contains("<script") || 
+            lowerContent.contains("javascript:") || 
+            lowerContent.contains("vbscript:") ||
+            lowerContent.contains("onload=") ||
+            lowerContent.contains("onerror=") ||
+            lowerContent.contains("onclick=")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Sanitize message content to prevent XSS and other security issues
-     * In production, use a proper sanitization library like OWASP Java HTML Sanitizer
+     * Enhanced version with better security
      */
     private String sanitizeMessageContent(String content) {
         if (content == null) {
             return "";
         }
 
-        // Basic sanitization - in production use a proper library
-        return content.trim()
-                .replaceAll("<script[^>]*>.*?</script>", "") // Remove script tags
-                .replaceAll("<[^>]*>", "") // Remove all HTML tags
-                .replaceAll("javascript:", "") // Remove javascript: protocols
-                .replaceAll("vbscript:", "") // Remove vbscript: protocols
-                .replaceAll("onload", "") // Remove onload attributes
-                .replaceAll("onerror", "") // Remove onerror attributes
-                .replaceAll("onclick", ""); // Remove onclick attributes
+        // Enhanced sanitization with multiple passes
+        String sanitized = content.trim();
+        
+        // Remove script tags and dangerous HTML
+        sanitized = sanitized.replaceAll("(?i)<script[^>]*>.*?</script>", "");
+        sanitized = sanitized.replaceAll("(?i)<iframe[^>]*>.*?</iframe>", "");
+        sanitized = sanitized.replaceAll("(?i)<object[^>]*>.*?</object>", "");
+        sanitized = sanitized.replaceAll("(?i)<embed[^>]*>.*?</embed>", "");
+        
+        // Remove dangerous attributes
+        sanitized = sanitized.replaceAll("(?i)\\s*on\\w+\\s*=", "");
+        sanitized = sanitized.replaceAll("(?i)javascript\\s*:", "");
+        sanitized = sanitized.replaceAll("(?i)vbscript\\s*:", "");
+        sanitized = sanitized.replaceAll("(?i)data\\s*:", "");
+        
+        // Remove all HTML tags (allow only plain text)
+        sanitized = sanitized.replaceAll("<[^>]*>", "");
+        
+        // Escape remaining dangerous characters
+        sanitized = sanitized.replace("&", "&amp;")
+                           .replace("<", "&lt;")
+                           .replace(">", "&gt;")
+                           .replace("\"", "&quot;")
+                           .replace("'", "&#x27;");
 
-        // Additional sanitization can be added here
+        return sanitized;
     }
 
     /**

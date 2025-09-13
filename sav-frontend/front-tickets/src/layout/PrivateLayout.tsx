@@ -61,7 +61,7 @@ export default function PrivateLayout() {
       />
       <NavLink
         component={Link}
-        to="/tickets"
+        to="/tickets/create"
         label="Create Ticket"
         leftSection={<IconTicket size="1rem" />}
         style={getNavLinkStyles()}
@@ -113,10 +113,10 @@ export default function PrivateLayout() {
         leftSection={<IconTicket size="1rem" />}
         style={getNavLinkStyles()}
       />
-      <NavLink 
-        component={Link} 
-        to="/users" 
-        label="Users" 
+      <NavLink
+        component={Link}
+        to="/users"
+        label="Users"
         leftSection={<IconUsers size="1rem" />}
         style={getNavLinkStyles()}
       />
@@ -223,37 +223,32 @@ export default function PrivateLayout() {
       transform: 'translateX(2px)',
       transition: 'all 0.2s ease',
     },
-    '&[data-active="true"]': {
+    '&[dataActive="true"]': {
       backgroundColor: 'rgba(255, 255, 255, 0.25)',
       color: 'white',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-    }
+    },
   })
 
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ 
-        width: 280, 
-        breakpoint: 'sm', 
-        collapsed: { mobile: !open }
+      navbar={{
+        width: 280,
+        breakpoint: 'sm',
+        collapsed: { mobile: !open },
       }}
       padding="md"
     >
       <AppShell.Header>
         <Flex h="100%" px="md" justify="space-between" align="center">
           <Group>
-            <Burger 
-              opened={open} 
-              onClick={toggle} 
-              hiddenFrom="sm" 
-              size="sm" 
-            />
+            <Burger opened={open} onClick={toggle} hiddenFrom="sm" size="sm" />
             <Text fw={700} size="lg" c="dark">
               SAV System
             </Text>
           </Group>
-          
+
           <Menu shadow="md" width={200}>
             <Menu.Target>
               <Button variant="subtle" rightSection={<IconChevronDown size="1rem" />}>
@@ -267,11 +262,7 @@ export default function PrivateLayout() {
             </Menu.Target>
             <Menu.Dropdown>
               <Menu.Label>{getUserRoleText()}</Menu.Label>
-              <Menu.Item
-                component={Link}
-                to="/settings"
-                leftSection={<IconSettings size="1rem" />}
-              >
+              <Menu.Item component={Link} to="/settings" leftSection={<IconSettings size="1rem" />}>
                 Settings
               </Menu.Item>
               <Menu.Divider />
@@ -287,7 +278,7 @@ export default function PrivateLayout() {
         </Flex>
       </AppShell.Header>
 
-      <AppShell.Navbar 
+      <AppShell.Navbar
         p="md"
         className="sidebar-navbar"
         style={{
@@ -296,26 +287,24 @@ export default function PrivateLayout() {
         }}
       >
         <Flex direction="column" h="100%">
-          <Text 
-            size="sm" 
-            fw={500} 
-            c="white" 
+          <Text
+            size="sm"
+            fw={500}
+            c="white"
             mb="xs"
-            style={{ 
+            style={{
               opacity: 0.9,
               textTransform: 'uppercase',
-              letterSpacing: '0.5px'
+              letterSpacing: '0.5px',
             }}
           >
             Navigation
           </Text>
-          
+
           <ScrollArea flex={1} scrollbarSize={4}>
-            <Stack gap={4}>
-              {renderNavigation()}
-            </Stack>
+            <Stack gap={4}>{renderNavigation()}</Stack>
           </ScrollArea>
-          
+
           <Box>
             <Divider my="xs" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }} />
             <NavLink

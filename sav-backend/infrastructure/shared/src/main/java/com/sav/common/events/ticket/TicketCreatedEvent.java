@@ -1,7 +1,6 @@
 package com.sav.common.events.ticket;
 
 import com.sav.common.enums.Priority;
-import com.sav.common.enums.TicketStatus;
 import com.sav.common.enums.TicketType;
 import com.sav.common.events.BaseDomainEvent;
 import lombok.Getter;

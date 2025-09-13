@@ -1,12 +1,37 @@
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
+import {
+  Container,
+  Title,
+  Text,
+  Grid,
+  Card,
+  Stack,
+  Group,
+  Badge,
+  Button,
+  Avatar,
+  Box,
+  Loader,
+  Alert,
+} from '@mantine/core'
+import {
+  IconUser,
+  IconMail,
+  IconPhone,
+  IconBuilding,
+  IconCalendar,
+  IconEdit,
+  IconArrowLeft,
+} from '@tabler/icons-react'
 import type { UserResponse } from '@/types'
 
 export default function UserDetail() {
   const { id } = useParams({ strict: false }) as { id: string }
+  const navigate = useNavigate()
 
   const {
     data: user,
@@ -20,230 +45,207 @@ export default function UserDetail() {
 
   if (!id) {
     return (
-      <div className="user-detail">
-        <h1>User Detail</h1>
-        <div className="error-message" style={{ color: 'red', padding: '10px' }}>
+      <Container size="md" py="xl">
+        <Alert color="red" title="Error" icon={<IconUser size="1rem" />}>
           No user ID provided.
-        </div>
-      </div>
+        </Alert>
+      </Container>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="user-detail">
-        <h1>User Detail</h1>
-        <div>Loading user...</div>
-      </div>
+      <Container size="md" py="xl">
+        <Group justify="center">
+          <Loader size="lg" />
+          <Text>Loading user details...</Text>
+        </Group>
+      </Container>
     )
   }
 
   if (error) {
     return (
-      <div className="user-detail">
-        <h1>User Detail</h1>
-        <div className="error-message" style={{ color: 'red', padding: '10px' }}>
+      <Container size="md" py="xl">
+        <Alert color="red" title="Error" icon={<IconUser size="1rem" />}>
           Error loading user: {getErrorMessage(error)}
-        </div>
-      </div>
+        </Alert>
+      </Container>
     )
   }
 
   if (!user) {
     return (
-      <div className="user-detail">
-        <h1>User Detail</h1>
-        <div className="error-message" style={{ color: 'red', padding: '10px' }}>
+      <Container size="md" py="xl">
+        <Alert color="yellow" title="Not Found" icon={<IconUser size="1rem" />}>
           User not found.
-        </div>
-      </div>
+        </Alert>
+      </Container>
     )
   }
 
   return (
-    <div className="user-detail">
-      <div className="header" style={{ marginBottom: '30px' }}>
-        <h1>{user.fullName || `${user.firstName} ${user.lastName}`}</h1>
-        <div style={{ fontSize: '16px', color: '#666' }}>@{user.username}</div>
-      </div>
+    <Container size="md" py="xl">
+      <Stack gap="xl">
+        <Group justify="space-between" align="flex-start">
+          <Group>
+            <Avatar size="xl" color="blue">
+              {user.firstName?.[0]}
+              {user.lastName?.[0]}
+            </Avatar>
+            <Box>
+              <Title order={2}>{user.fullName || `${user.firstName} ${user.lastName}`}</Title>
+              <Text c="dimmed" size="lg">
+                @{user.username}
+              </Text>
+            </Box>
+          </Group>
+          <Button
+            leftSection={<IconEdit size="1rem" />}
+            onClick={() => navigate({ to: `/users/${user.id}/edit` })}
+          >
+            Edit User
+          </Button>
+        </Group>
 
-      <div
-        className="user-info-grid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-          gap: '20px',
-        }}
-      >
-        {/* Basic Information */}
-        <div
-          className="info-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f9f9f9',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Basic Information</h3>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Card withBorder shadow="sm" p="md">
+              <Stack gap="md">
+                <Title order={3}>Basic Information</Title>
 
-          <div className="info-grid" style={{ display: 'grid', gap: '15px' }}>
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Email</div>
-              <div>{user.email}</div>
-            </div>
+                <Group>
+                  <IconMail size="1rem" />
+                  <Box>
+                    <Text fw={500} size="sm">
+                      Email
+                    </Text>
+                    <Text>{user.email}</Text>
+                  </Box>
+                </Group>
 
-            {user.phoneNumber && (
-              <div className="info-item">
-                <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Phone Number</div>
-                <div>{user.phoneNumber}</div>
-              </div>
-            )}
+                {user.phoneNumber && (
+                  <Group>
+                    <IconPhone size="1rem" />
+                    <Box>
+                      <Text fw={500} size="sm">
+                        Phone Number
+                      </Text>
+                      <Text>{user.phoneNumber}</Text>
+                    </Box>
+                  </Group>
+                )}
 
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Role</div>
-              <div>
-                <span
-                  style={{
-                    padding: '4px 12px',
-                    borderRadius: '16px',
-                    fontSize: '14px',
-                    backgroundColor:
-                      user.role === 'ADMIN'
-                        ? '#dc3545'
-                        : user.role === 'TECHNICIAN'
-                          ? '#007bff'
-                          : '#28a745',
-                    color: 'white',
-                  }}
-                >
-                  {user.role}
-                </span>
-              </div>
-            </div>
+                <Group>
+                  <IconUser size="1rem" />
+                  <Box>
+                    <Text fw={500} size="sm">
+                      Role
+                    </Text>
+                    <Badge
+                      color={
+                        user.role === 'ADMIN'
+                          ? 'red'
+                          : user.role === 'TECHNICIAN'
+                            ? 'blue'
+                            : 'green'
+                      }
+                      variant="filled"
+                    >
+                      {user.role}
+                    </Badge>
+                  </Box>
+                </Group>
 
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Status</div>
-              <div>
-                <span
-                  style={{
-                    padding: '4px 12px',
-                    borderRadius: '16px',
-                    fontSize: '14px',
-                    backgroundColor:
-                      user.status === 'ACTIVE'
-                        ? '#28a745'
-                        : user.status === 'SUSPENDED'
-                          ? '#dc3545'
-                          : '#ffc107',
-                    color: user.status === 'PENDING_ACTIVATION' ? '#000' : 'white',
-                  }}
-                >
-                  {user.status}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+                <Group>
+                  <IconUser size="1rem" />
+                  <Box>
+                    <Text fw={500} size="sm">
+                      Status
+                    </Text>
+                    <Badge
+                      color={
+                        user.status === 'ACTIVE'
+                          ? 'green'
+                          : user.status === 'INACTIVE'
+                            ? 'gray'
+                            : user.status === 'SUSPENDED'
+                              ? 'red'
+                              : 'yellow'
+                      }
+                      variant="filled"
+                    >
+                      {user.status}
+                    </Badge>
+                  </Box>
+                </Group>
+              </Stack>
+            </Card>
+          </Grid.Col>
 
-        {/* Organization Information */}
-        <div
-          className="info-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f9f9f9',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Organization</h3>
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Card withBorder shadow="sm" p="md">
+              <Stack gap="md">
+                <Title order={3}>Additional Information</Title>
 
-          <div className="info-grid" style={{ display: 'grid', gap: '15px' }}>
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Company</div>
-              <div>{user.company || 'Not specified'}</div>
-            </div>
+                {user.company && (
+                  <Group>
+                    <IconBuilding size="1rem" />
+                    <Box>
+                      <Text fw={500} size="sm">
+                        Company
+                      </Text>
+                      <Text>{user.company}</Text>
+                    </Box>
+                  </Group>
+                )}
 
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Department</div>
-              <div>{user.department || 'Not specified'}</div>
-            </div>
-          </div>
-        </div>
+                {user.department && (
+                  <Group>
+                    <IconBuilding size="1rem" />
+                    <Box>
+                      <Text fw={500} size="sm">
+                        Department
+                      </Text>
+                      <Text>{user.department}</Text>
+                    </Box>
+                  </Group>
+                )}
 
-        {/* Account Information */}
-        <div
-          className="info-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f9f9f9',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Account Information</h3>
+                <Group>
+                  <IconCalendar size="1rem" />
+                  <Box>
+                    <Text fw={500} size="sm">
+                      Created
+                    </Text>
+                    <Text>{formatDate(user.createdAt)}</Text>
+                  </Box>
+                </Group>
 
-          <div className="info-grid" style={{ display: 'grid', gap: '15px' }}>
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>User ID</div>
-              <div style={{ fontFamily: 'monospace', fontSize: '14px' }}>{user.id}</div>
-            </div>
+                <Group>
+                  <IconCalendar size="1rem" />
+                  <Box>
+                    <Text fw={500} size="sm">
+                      Last Updated
+                    </Text>
+                    <Text>{formatDate(user.updatedAt)}</Text>
+                  </Box>
+                </Group>
+              </Stack>
+            </Card>
+          </Grid.Col>
+        </Grid>
 
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Created</div>
-              <div>{formatDate(user.createdAt)}</div>
-            </div>
-
-            <div className="info-item">
-              <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>Last Updated</div>
-              <div>{formatDate(user.updatedAt)}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div
-          className="info-card"
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#f9f9f9',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Actions</h3>
-
-          <div className="actions-grid" style={{ display: 'grid', gap: '10px' }}>
-            <button
-              style={{
-                padding: '10px 15px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-              onClick={() => (window.location.href = `/users/${user.id}/edit`)}
-            >
-              Edit User
-            </button>
-
-            <button
-              style={{
-                padding: '10px 15px',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-              onClick={() => window.history.back()}
-            >
-              Back to Users
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+        <Group justify="flex-start">
+          <Button
+            variant="outline"
+            leftSection={<IconArrowLeft size="1rem" />}
+            onClick={() => navigate({ to: '/users' })}
+          >
+            Back to Users
+          </Button>
+        </Group>
+      </Stack>
+    </Container>
   )
 }

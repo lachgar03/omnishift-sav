@@ -1,11 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { ticketsApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
 import { getStatusColor, getPriorityColor } from '@/utils/statusUtils'
 import type { TicketResponse } from '@/types'
+import { TicketStatus } from '@/constants/roles'
 
 export default function AssignedTickets() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
   const {
     data: tickets,
     isLoading,
@@ -14,6 +19,24 @@ export default function AssignedTickets() {
     queryKey: ['tickets', 'assigned-to-me'],
     queryFn: () => ticketsApi.getAssignedToMe(),
   })
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ ticketId, status }: { ticketId: number; status: TicketStatus }) =>
+      ticketsApi.update(ticketId, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tickets'] })
+    },
+    onError: (error: unknown) => {
+      console.error('Failed to update ticket status:', error)
+    },
+  })
+
+  const handleStartWorking = (ticketId: number) => {
+    updateStatusMutation.mutate({
+      ticketId,
+      status: TicketStatus.IN_PROGRESS,
+    })
+  }
 
   if (isLoading) {
     return (
@@ -95,12 +118,21 @@ export default function AssignedTickets() {
             >
               <div>
                 <h3 style={{ margin: '0 0 5px 0' }}>
-                  <a
-                    href={`/tickets/${ticket.id}`}
-                    style={{ textDecoration: 'none', color: '#007bff' }}
+                  <button
+                    onClick={() => navigate({ to: `/tickets/${ticket.id}` })}
+                    style={{
+                      textDecoration: 'none',
+                      color: '#007bff',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: 'inherit',
+                      fontFamily: 'inherit',
+                    }}
                   >
                     #{ticket.id} - {ticket.title}
-                  </a>
+                  </button>
                 </h3>
                 <div style={{ fontSize: '14px', color: '#666' }}>
                   Created: {formatDate(ticket.createdAt)}
@@ -192,7 +224,7 @@ export default function AssignedTickets() {
                   cursor: 'pointer',
                   fontSize: '14px',
                 }}
-                onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
+                onClick={() => navigate({ to: `/tickets/${ticket.id}` })}
               >
                 View Details
               </button>
@@ -208,12 +240,10 @@ export default function AssignedTickets() {
                     cursor: 'pointer',
                     fontSize: '14px',
                   }}
-                  onClick={() => {
-                    // This would trigger a mutation to update ticket status
-                    console.log('Start working on ticket', ticket.id)
-                  }}
+                  onClick={() => handleStartWorking(ticket.id)}
+                  disabled={updateStatusMutation.isPending}
                 >
-                  Start Working
+                  {updateStatusMutation.isPending ? 'Updating...' : 'Start Working'}
                 </button>
               )}
             </div>

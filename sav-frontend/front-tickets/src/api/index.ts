@@ -5,6 +5,9 @@ export * from './queryClient'
 export * from './tickets'
 export * from './users'
 
+// Re-export user sync utilities
+export * from '../utils/userSyncUtils'
+
 // Re-export specific functions for convenience
 export { initAuth, login, logout, getToken, refreshToken } from './authConfig'
 
@@ -165,4 +168,22 @@ export const activateUser = async (userId: string): Promise<UserResponse> => {
 
 export const deactivateUser = async (userId: string): Promise<UserResponse> => {
   return await usersApi.deactivate(userId)
+}
+
+// User Sync wrapper functions
+export const forceUserSync = async (): Promise<UserResponse> => {
+  return await usersApi.forceSync()
+}
+
+export const checkUserExists = async (): Promise<boolean> => {
+  const response = await usersApi.checkExists()
+  return response.exists
+}
+
+export const getTokenInfo = async () => {
+  return await usersApi.getTokenInfo()
+}
+
+export const createMinimalUser = async (): Promise<UserResponse> => {
+  return await usersApi.createMinimal()
 }

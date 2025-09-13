@@ -29,7 +29,8 @@ import {
   IconPlus,
 } from '@tabler/icons-react'
 import { useAuthStore } from '@store/authStore'
-import { ticketsApi, usersApi } from '@/api'
+import { ticketsApi } from '@/api'
+import { ticketService, userService } from '@/services'
 import type { DashboardResponse, TicketStatsResponse, UserStatsResponse } from '@/types'
 import { getStatusColor, getPriorityColor } from '@/utils/statusUtils'
 
@@ -50,14 +51,14 @@ export default function DashboardPage() {
   // Fetch global statistics (Admin/Technician only)
   const { data: ticketStats, refetch: refetchTicketStats } = useQuery<TicketStatsResponse>({
     queryKey: ['ticket-stats'],
-    queryFn: ticketsApi.getStatistics,
+    queryFn: ticketService.getTicketStatistics,
     enabled: authStore.isTechnician || authStore.isAdmin,
   })
 
   // Fetch user statistics (Admin only)
   const { data: userStats, refetch: refetchUserStats } = useQuery<UserStatsResponse>({
     queryKey: ['user-stats'],
-    queryFn: usersApi.getStatistics,
+    queryFn: userService.getUserStatistics,
     enabled: authStore.isAdmin,
   })
 
@@ -73,11 +74,13 @@ export default function DashboardPage() {
 
   if (dashboardLoading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        padding: '1rem'
-      }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          padding: '1rem',
+        }}
+      >
         <Stack gap="lg" style={{ maxWidth: '100%', width: '100%' }}>
           <Skeleton height={40} />
           <Grid>
@@ -584,7 +587,9 @@ export default function DashboardPage() {
     <Flex direction="column" h="100%">
       <Group justify="space-between" wrap="wrap" mb="lg">
         <Box>
-          <Title order={1} c="dark">Welcome to SAV System</Title>
+          <Title order={1} c="dark">
+            Welcome to SAV System
+          </Title>
           <Text c="dimmed" size="lg">
             Support ticket management dashboard
           </Text>
@@ -596,9 +601,7 @@ export default function DashboardPage() {
         </Group>
       </Group>
 
-      <Box style={{ flex: 1 }}>
-        {renderDashboard()}
-      </Box>
+      <Box style={{ flex: 1 }}>{renderDashboard()}</Box>
     </Flex>
   )
 }

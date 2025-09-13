@@ -7,6 +7,8 @@ import type {
   UpdateUserRoleRequest,
   UpdateUserStatusRequest,
   UserStatsResponse,
+  TokenInfoResponse,
+  UserSyncExistsResponse,
 } from '@/types'
 
 export const usersApi = {
@@ -80,6 +82,32 @@ export const usersApi = {
 
   deactivate: async (userId: string): Promise<UserResponse> => {
     const { data } = await axiosInstance.patch(`${API_ENDPOINTS.USERS}/${userId}/deactivate`, {})
+    return data
+  },
+
+  // User Sync Methods
+  getTokenInfo: async (): Promise<TokenInfoResponse> => {
+    const { data } = await axiosInstance.get(API_ENDPOINTS.USERS_SYNC_TOKEN_INFO)
+    return data
+  },
+
+  getUserInfo: async (): Promise<unknown> => {
+    const { data } = await axiosInstance.get(API_ENDPOINTS.USERS_SYNC_USER_INFO)
+    return data
+  },
+
+  forceSync: async (): Promise<UserResponse> => {
+    const { data } = await axiosInstance.post(API_ENDPOINTS.USERS_SYNC_FORCE_SYNC)
+    return data
+  },
+
+  checkExists: async (): Promise<UserSyncExistsResponse> => {
+    const { data } = await axiosInstance.get(API_ENDPOINTS.USERS_SYNC_EXISTS)
+    return data
+  },
+
+  createMinimal: async (): Promise<UserResponse> => {
+    const { data } = await axiosInstance.post(API_ENDPOINTS.USERS_SYNC_CREATE_MINIMAL)
     return data
   },
 }

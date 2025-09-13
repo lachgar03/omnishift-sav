@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { usersApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
 import type { UserResponse } from '@/types'
 
 export default function TechniciansList() {
+  const navigate = useNavigate()
   const {
     data: technicians,
     isLoading,
@@ -139,7 +141,7 @@ export default function TechniciansList() {
                   cursor: 'pointer',
                   fontSize: '14px',
                 }}
-                onClick={() => (window.location.href = `/users/${technician.id}`)}
+                onClick={() => navigate({ to: `/users/${technician.id}` })}
               >
                 View Details
               </button>

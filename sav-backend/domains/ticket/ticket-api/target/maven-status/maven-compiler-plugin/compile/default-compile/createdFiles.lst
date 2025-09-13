@@ -4,6 +4,7 @@ com\sav\ticket\api\controller\TicketMessageController.class
 com\sav\ticket\api\dto\AssignTeamRequest.class
 com\sav\ticket\api\dto\TicketStatsResponse.class
 com\sav\ticket\api\controller\DebugController.class
+com\sav\ticket\api\dto\UpdateMyTicketRequest.class
 com\sav\ticket\api\dto\TicketAttachmentResponse.class
 com\sav\ticket\api\dto\AssignUserRequest.class
 com\sav\ticket\api\dto\DashboardResponse$DashboardResponseBuilder.class

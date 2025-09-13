@@ -7,6 +7,7 @@ import com.sav.ticket.api.mapper.TicketMapper;
 import com.sav.security.util.AuthUtil;
 import com.sav.ticket.domain.entity.Ticket;
 import com.sav.ticket.domain.service.TicketService;
+import com.sav.ticket.domain.service.TicketSecurityService;
 import com.sav.common.enums.TicketStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class TicketController {
 
     private final TicketService ticketService;
     private final TicketMapper ticketMapper;
+    private final TicketSecurityService ticketSecurityService;
 
     /**
      * Create a new ticket
@@ -108,6 +110,9 @@ public class TicketController {
     @GetMapping("/{ticketId}")
     @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<TicketResponse> getTicketById(@PathVariable(name = "ticketId") Long ticketId) {
+        // Add security validation
+        ticketSecurityService.validateTicketAccess(ticketId);
+        
         return ticketService.getTicketWithMessages(ticketId)
                 .map(ticket -> ResponseEntity.ok(ticketMapper.toResponse(ticket)))
                 .orElse(ResponseEntity.notFound().build());
@@ -120,6 +125,9 @@ public class TicketController {
             @PathVariable(name = "ticketId") Long ticketId,
             @Valid @RequestBody UpdateTicketRequest request,
             Authentication authentication) {
+
+        // Validate ticket access
+        ticketSecurityService.validateTicketModification(ticketId);
 
         String userId = AuthUtil.extractUserIdFromAuth(authentication);
         if (userId == null) {

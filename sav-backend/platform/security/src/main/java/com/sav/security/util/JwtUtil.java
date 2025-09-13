@@ -41,7 +41,11 @@ public class JwtUtil {
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = jwtAuth.getToken();
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
-            return (List<String>) realmAccess.get("roles");
+            if (realmAccess != null) {
+                @SuppressWarnings("unchecked")
+                List<String> roles = (List<String>) realmAccess.get("roles");
+                return roles != null ? roles : List.of();
+            }
         }
         return List.of();
     }

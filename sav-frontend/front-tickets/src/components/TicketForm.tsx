@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Card,
@@ -13,18 +13,20 @@ import {
   Title,
 } from '@mantine/core'
 import { IconAlertCircle } from '@tabler/icons-react'
-import { ticketsApi } from '@/api'
-import type { CreateTicketRequest, TicketResponse } from '@/types'
-import { TicketType, Priority } from '@/constants/roles'
+import { usersApi } from '@/api'
+import { ticketService } from '@/services'
+import type { TicketResponse } from '@/types'
+import { CreateTicketRequest, TicketType, Priority } from '@/types/api'
 import { useNavigate } from '@tanstack/react-router'
 import { getErrorMessage, getValidationErrors } from '@/utils/errorUtils'
+import { ErrorBoundary } from './ErrorBoundary'
 
 interface TicketFormProps {
   onSuccess?: () => void
   onCancel?: () => void
 }
 
-export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
+const TicketFormComponent = ({ onSuccess, onCancel }: TicketFormProps) => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -37,9 +39,64 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
 
   const [errors, setErrors] = useState<Partial<CreateTicketRequest>>({})
   const [apiError, setApiError] = useState<string>('')
+  const [isSyncing, setIsSyncing] = useState(false)
+
+  // Ensure user exists before allowing ticket creation
+  useEffect(() => {
+    const ensureUserExists = async () => {
+      // Check if we've already tried user sync recently to prevent infinite loops
+      const lastSyncAttempt = sessionStorage.getItem('lastUserSyncAttempt')
+      const now = Date.now()
+      const syncCooldown = 30000 // 30 seconds cooldown
+
+      if (lastSyncAttempt && now - parseInt(lastSyncAttempt) < syncCooldown) {
+        console.log('User sync cooldown active, skipping sync in TicketForm')
+        setIsSyncing(false)
+        return
+      }
+
+      try {
+        setIsSyncing(true)
+        const exists = await usersApi.checkExists()
+        if (!exists.exists) {
+          console.log('User not found, syncing before ticket creation...')
+          sessionStorage.setItem('lastUserSyncAttempt', now.toString())
+
+          try {
+            await usersApi.forceSync()
+            console.log('User sync successful')
+          } catch {
+            console.warn('Force sync failed, trying minimal user creation...')
+            try {
+              await usersApi.createMinimal()
+              console.log('Minimal user creation successful')
+            } catch (minimalError) {
+              console.error('Both force sync and minimal user creation failed:', minimalError)
+              setApiError('User sync failed. Please refresh the page and try again.')
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to ensure user exists:', error)
+        setApiError('Failed to sync user. Please refresh the page and try again.')
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
+    ensureUserExists()
+  }, [])
 
   const createTicketMutation = useMutation({
-    mutationFn: ticketsApi.create,
+    mutationFn: (data: CreateTicketRequest) => {
+      const apiRequest: CreateTicketRequest = {
+        title: data.title,
+        description: data.description,
+        type: data.type,
+        priority: data.priority,
+      }
+      return ticketService.createTicket(apiRequest)
+    },
     onSuccess: (data: TicketResponse) => {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       queryClient.invalidateQueries({ queryKey: ['my-tickets'] })
@@ -62,7 +119,13 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
       }
 
       // Set general error message
-      setApiError(getErrorMessage(error))
+      const errorMessage = getErrorMessage(error)
+      setApiError(errorMessage)
+
+      // If it's a user not found error, suggest logging out and back in
+      if (errorMessage.includes('user') && errorMessage.includes('not found')) {
+        setApiError('User not found. Please try logging out and logging back in.')
+      }
     },
   })
 
@@ -89,6 +152,12 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
     e.preventDefault()
 
     if (!validateForm()) {
+      return
+    }
+
+    // Ensure user is synced before creating ticket
+    if (isSyncing) {
+      setApiError('Please wait while we sync your user account...')
       return
     }
 
@@ -139,6 +208,16 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
 
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
+            {isSyncing && (
+              <Alert
+                icon={<IconAlertCircle size="1rem" />}
+                color="blue"
+                title="Syncing User Account"
+              >
+                Please wait while we sync your user account with the server...
+              </Alert>
+            )}
+
             <TextInput
               label="Title"
               placeholder="Brief description of the issue or request"
@@ -147,6 +226,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
               error={errors.title}
               maxLength={100}
               required
+              disabled={isSyncing}
               rightSection={
                 <Text size="xs" c="dimmed">
                   {formData.title.length}/100
@@ -160,6 +240,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
               onChange={(value) => handleInputChange('type', value as TicketType)}
               data={ticketTypeOptions}
               required
+              disabled={isSyncing}
             />
 
             <Select
@@ -171,6 +252,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
                 label: `${option.label} - ${option.description}`,
               }))}
               required
+              disabled={isSyncing}
             />
 
             <Textarea
@@ -181,6 +263,7 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
               error={errors.description}
               rows={6}
               maxLength={1000}
+              disabled={isSyncing}
               rightSection={
                 <Text size="xs" c="dimmed">
                   {formData.description?.length || 0}/1000
@@ -200,10 +283,14 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
               )}
               <Button
                 type="submit"
-                loading={createTicketMutation.isPending}
-                disabled={createTicketMutation.isPending}
+                loading={createTicketMutation.isPending || isSyncing}
+                disabled={createTicketMutation.isPending || isSyncing}
               >
-                {createTicketMutation.isPending ? 'Creating...' : 'Create Ticket'}
+                {isSyncing
+                  ? 'Syncing...'
+                  : createTicketMutation.isPending
+                    ? 'Creating...'
+                    : 'Create Ticket'}
               </Button>
             </Group>
 
@@ -218,3 +305,9 @@ export const TicketForm = ({ onSuccess, onCancel }: TicketFormProps) => {
     </Card>
   )
 }
+
+export const TicketForm = (props: TicketFormProps) => (
+  <ErrorBoundary>
+    <TicketFormComponent {...props} />
+  </ErrorBoundary>
+)

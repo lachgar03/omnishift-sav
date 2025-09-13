@@ -1,3 +1,5 @@
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-domain\src\main\java\com\sav\user\domain\entity\User.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-domain\src\main\java\com\sav\user\domain\repository\UserRepositoryPort.java
 C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-domain\src\main\java\com\sav\user\domain\service\UserService.java
+C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-domain\src\main\java\com\sav\user\domain\service\EnhancedUserService.java
+C:\Users\mehdi\OneDrive\Bureau\omnishft-sav\sav-backend\domains\user\user-domain\src\main\java\com\sav\user\domain\service\UserSyncService.java

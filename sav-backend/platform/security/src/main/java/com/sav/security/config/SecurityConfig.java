@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,7 +28,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .ignoringRequestMatchers("/api/auth/**", "/api/public/**")
+                )
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
@@ -65,6 +69,7 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
             if (realmAccess != null) {
+                @SuppressWarnings("unchecked")
                 Collection<String> roles = (Collection<String>) realmAccess.get("roles");
                 if (roles != null) {
                     return roles.stream()
@@ -76,8 +81,10 @@ public class SecurityConfig {
 
             Map<String, Object> resourceAccess = jwt.getClaimAsMap("resource_access");
             if (resourceAccess != null) {
+                @SuppressWarnings("unchecked")
                 Map<String, Object> clientAccess = (Map<String, Object>) resourceAccess.get("sav-backend");
                 if (clientAccess != null) {
+                    @SuppressWarnings("unchecked")
                     Collection<String> roles = (Collection<String>) clientAccess.get("roles");
                     if (roles != null) {
                         return roles.stream()
@@ -96,14 +103,36 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));  
-        configuration.setAllowedOrigins(List.of("http://localhost:8081"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        
+        // Restrict origins to specific domains only
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:3000", 
+            "https://yourdomain.com" // Replace with actual production domain
+        ));
+        
+        // Only allow necessary HTTP methods
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        
+        // Restrict headers to only necessary ones
+        configuration.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "X-Requested-With",
+            "X-CSRF-Token"
+        ));
+        
+        // Expose only necessary headers
+        configuration.setExposedHeaders(List.of(
+            "X-CSRF-Token",
+            "X-Total-Count"
+        ));
+        
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // Cache preflight for 1 hour
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/api/**", configuration);
         return source;
     }
 

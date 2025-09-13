@@ -1,7 +1,7 @@
 export const API_BASE_URL = 'http://localhost:8081/api'
 export const KEYCLOAK_URL = 'http://localhost:8180'
 export const KEYCLOAK_REALM = 'sav-realm'
-export const KEYCLOAK_CLIENT_ID = 'sav-frontend'
+export const KEYCLOAK_CLIENT_ID = 'sav-backend'
 
 export const API_ENDPOINTS = {
   // Auth
@@ -15,6 +15,13 @@ export const API_ENDPOINTS = {
   USERS_BY_STATUS: '/users/status',
   USERS_SEARCH: '/users/search',
   USERS_STATISTICS: '/users/statistics',
+
+  // User Sync Endpoints
+  USERS_SYNC_TOKEN_INFO: '/users/sync/token-info',
+  USERS_SYNC_USER_INFO: '/users/sync/user-info',
+  USERS_SYNC_FORCE_SYNC: '/users/sync/force-sync',
+  USERS_SYNC_EXISTS: '/users/sync/exists',
+  USERS_SYNC_CREATE_MINIMAL: '/users/sync/create-minimal',
 
   // Tickets
   TICKETS: '/tickets',

@@ -7,6 +7,7 @@ import com.sav.user.api.dto.*;
 import com.sav.user.api.mapper.UserMapper;
 import com.sav.user.domain.entity.User;
 import com.sav.user.domain.service.UserService;
+import com.sav.user.api.service.CentralizedUserSyncService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,22 +27,25 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private final CentralizedUserSyncService centralizedUserSyncService;
 
     /**
-     * Get current user profile
+     * Get current user profile with automatic user creation fallback
+     * Delegates user creation logic to CentralizedUserSyncService
      */
     @GetMapping("/me")
     @PreAuthorize("hasAnyRole('USER', 'TECHNICIAN', 'ADMIN')")
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
-        String userId = AuthUtil.extractUserIdFromAuth(authentication);
-        if (userId == null) {
-            return ResponseEntity.badRequest().build();
+        try {
+            User user = centralizedUserSyncService.getOrCreateUserFromJwt(authentication);
+            log.debug("Retrieved current user: {}", user.getUsername());
+            return ResponseEntity.ok(userMapper.toResponse(user));
+        } catch (Exception e) {
+            log.error("Error getting current user", e);
+            return ResponseEntity.internalServerError().build();
         }
-
-        return userService.getUserById(userId)
-                .map(user -> ResponseEntity.ok(userMapper.toResponse(user)))
-                .orElse(ResponseEntity.notFound().build());
     }
+
 
     /**
      * Update current user profile

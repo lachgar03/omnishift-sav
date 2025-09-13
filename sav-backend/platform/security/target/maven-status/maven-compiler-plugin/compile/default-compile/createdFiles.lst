@@ -1,4 +1,6 @@
+com\sav\security\util\JwtTokenParser.class
 com\sav\security\SecurityApplication.class
 com\sav\security\util\AuthUtil.class
+com\sav\security\util\SecurityUtil.class
 com\sav\security\config\SecurityConfig.class
 com\sav\security\util\JwtUtil.class

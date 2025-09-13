@@ -21,13 +21,15 @@ public interface TicketRepositoryPort {
     boolean existsById(Long id);
     long count();
     List<Ticket> findByCreatedByUserId(String userId);
+    List<Ticket> findByTitle(String title);
 
     // Ticket-specific queries
     Optional<Ticket> findByIdWithMessages(Long id);
     Page<Ticket> findByCreatedByUserId(String userId, Pageable pageable);
 
     List<Ticket> findByAssignedUserId(String userId);
-
+    Page<Ticket> findByAssignedUserIdOrCreatedByUserId(String assignedUserId, String createdByUserId, Pageable pageable);
+    long countByAssignedUserId(String userId);
     // Status-based queries
     Page<Ticket> findByStatus(TicketStatus status, Pageable pageable);
     List<Ticket> findByStatus(TicketStatus status);
@@ -45,8 +47,12 @@ public interface TicketRepositoryPort {
     List<Ticket> findByStatusAndPriority(TicketStatus status, Priority priority);
     List<Ticket> findByAssignedUserIdAndStatus(String userId, TicketStatus status);
     List<Ticket> findByCreatedByUserIdAndStatus(String userId, TicketStatus status);
+    long countByAssignedUserIdAndStatusIn(String userId, List<TicketStatus> statuses);
 
     // Date-based queries (if you want to add them later)
     // List<Ticket> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
     // List<Ticket> findByUpdatedAtBetween(LocalDateTime start, LocalDateTime end);
+    
+    // Performance-optimized statistics query
+    TicketStatisticsProjection getTicketStatistics();
 }

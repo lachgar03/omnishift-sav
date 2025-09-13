@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { ticketsApi } from '@/api'
 import { getErrorMessage } from '@/utils/errorUtils'
 import { formatDate } from '@/utils/formatDate'
@@ -9,6 +9,7 @@ import type { TicketResponse } from '@/types'
 
 export default function TeamTickets() {
   const { team } = useParams({ strict: false }) as { team: string }
+  const navigate = useNavigate()
 
   const {
     data: tickets,
@@ -254,7 +255,11 @@ export default function TeamTickets() {
                 return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
               })
               .map((ticket) => (
-                <TeamTicketCard key={ticket.id} ticket={ticket} />
+                <TeamTicketCard
+                  key={ticket.id}
+                  ticket={ticket}
+                  onViewTicket={(ticketId) => navigate({ to: `/tickets/${ticketId}` })}
+                />
               ))}
           </div>
         </div>
@@ -269,7 +274,11 @@ export default function TeamTickets() {
               .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
               .slice(0, 5)
               .map((ticket) => (
-                <TeamTicketCard key={ticket.id} ticket={ticket} />
+                <TeamTicketCard
+                  key={ticket.id}
+                  ticket={ticket}
+                  onViewTicket={(ticketId) => navigate({ to: `/tickets/${ticketId}` })}
+                />
               ))}
           </div>
         </div>
@@ -287,9 +296,10 @@ export default function TeamTickets() {
 
 interface TeamTicketCardProps {
   ticket: TicketResponse
+  onViewTicket: (ticketId: number) => void
 }
 
-function TeamTicketCard({ ticket }: TeamTicketCardProps) {
+function TeamTicketCard({ ticket, onViewTicket }: TeamTicketCardProps) {
   return (
     <div
       className="team-ticket-card"
@@ -312,9 +322,19 @@ function TeamTicketCard({ ticket }: TeamTicketCardProps) {
       >
         <div>
           <h4 style={{ margin: '0 0 5px 0' }}>
-            <a href={`/tickets/${ticket.id}`} style={{ textDecoration: 'none', color: '#007bff' }}>
+            <button
+              onClick={() => onViewTicket(ticket.id)}
+              style={{
+                textDecoration: 'none',
+                color: '#007bff',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
               #{ticket.id} - {ticket.title}
-            </a>
+            </button>
           </h4>
           <div style={{ fontSize: '14px', color: '#666' }}>
             Created: {formatDate(ticket.createdAt)}
@@ -393,7 +413,7 @@ function TeamTicketCard({ ticket }: TeamTicketCardProps) {
             cursor: 'pointer',
             fontSize: '14px',
           }}
-          onClick={() => (window.location.href = `/tickets/${ticket.id}`)}
+          onClick={() => onViewTicket(ticket.id)}
         >
           View Details
         </button>

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for extracting information from JWT authentication tokens
@@ -53,7 +54,12 @@ public class AuthUtil {
             Jwt jwt = jwtAuth.getToken();
             Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
             if (realmAccess != null) {
-                return (List<String>) realmAccess.get("roles");
+                List<String> roles = (List<String>) realmAccess.get("roles");
+                if (roles != null) {
+                    return roles.stream()
+                            .filter(role -> List.of("ADMIN", "TECHNICIAN", "USER").contains(role))
+                            .collect(Collectors.toList());
+                }
             }
         }
         return List.of();
