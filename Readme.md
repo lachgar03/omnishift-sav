@@ -384,9 +384,10 @@ From the `sav-frontend/front-tickets` directory:
 | `GET` | `/api/tickets/my-tickets`| List current user's tickets | `USER`, `TECHNICIAN`, `ADMIN` |
 | `GET` | `/api/tickets/{id}` | Get ticket details, messages & attachments | Authorized user |
 | `PUT` | `/api/tickets/{id}` | Update ticket details/status | `TECHNICIAN`, `ADMIN` |
-| `POST` | `/api/tickets/{id}/assign`| Assign ticket to user or team | `ADMIN` |
-| `POST` | `/api/tickets/{id}/close` | Close a resolved or active ticket | Ticket creator or `ADMIN` |
-| `POST` | `/api/tickets/{id}/reopen`| Reopen a closed ticket | `TECHNICIAN`, `ADMIN` |
+| `PATCH` | `/api/tickets/{id}/assign-user`| Assign ticket to a technician | `ADMIN` |
+| `PATCH` | `/api/tickets/{id}/assign-team`| Assign ticket to a team | `ADMIN` |
+| `PATCH` | `/api/tickets/{id}/close` | Close a resolved or active ticket | `TECHNICIAN`, `ADMIN` |
+| `PATCH` | `/api/tickets/{id}/reopen`| Reopen a closed ticket | `TECHNICIAN`, `ADMIN` |
 
 ---
 
