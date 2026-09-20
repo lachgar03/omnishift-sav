@@ -12,9 +12,9 @@ spring:
   
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: admin
-    password: admin123
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DATABASE_USERNAME:admin}
+    password: ${DATABASE_PASSWORD:admin123}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -67,7 +67,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8180/realms/sav-realm
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/sav-realm}
 
 management:
   endpoints:
@@ -96,10 +96,10 @@ management:
   # No need for CORS configuration in backend when using gateway
 
   keycloak:
-    realm: sav-realm
-    auth-server-url: http://localhost:8180
-    resource: sav-backend
-    client-secret: CdhSvg12s8vJ5AH4xlkx0J8rwXNPSO96
+    realm: ${KEYCLOAK_REALM:sav-realm}
+    auth-server-url: ${KEYCLOAK_AUTH_SERVER_URL:http://localhost:8180}
+    resource: ${KEYCLOAK_RESOURCE:sav-backend}
+    client-secret: ${KEYCLOAK_CLIENT_SECRET:CdhSvg12s8vJ5AH4xlkx0J8rwXNPSO96}
 
   notification:
     email:

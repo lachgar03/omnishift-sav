@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@store/authStore'
-import TicketDetail from '@routes/TicketDetail'
+import TicketDetailPage from '@pages/TicketDetailPage'
 
 export const Route = createFileRoute('/tickets/$id')({
   beforeLoad: () => {
@@ -9,5 +9,5 @@ export const Route = createFileRoute('/tickets/$id')({
       throw redirect({ to: '/login' })
     }
   },
-  component: TicketDetail,
+  component: TicketDetailPage,
 })

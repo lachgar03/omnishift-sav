@@ -1,17 +1,59 @@
-# Frontend
-sav-frontend/node_modules/
-sav-frontend/.env
+# Root .gitignore for OmniShift SAV
 
-# Backend
-sav-backend/target/
-sav-backend/.env
+# Backend & Maven
+target/
+**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.flattened-pom.xml
 
-# OS & Editor
+# Frontend & Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+*.tsbuildinfo
+**/*.tsbuildinfo
+.eslintcache
+vite.config.js
+vite.config.d.ts
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.env
+*.local
+
+# IDE & Editors
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
 
 # Logs
+logs/
 **/logs/
-**/*.log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.directory
+Desktop.ini

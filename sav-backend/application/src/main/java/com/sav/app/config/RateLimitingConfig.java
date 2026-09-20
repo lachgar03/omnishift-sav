@@ -21,8 +21,14 @@ public class RateLimitingConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitingInterceptor())
-                .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/actuator/**", "/api/debug/**");
+                .addPathPatterns("/**")
+                .excludePathPatterns(
+                        "/actuator/**",
+                        "/debug/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
+                );
     }
 
     public static class RateLimitingInterceptor implements org.springframework.web.servlet.HandlerInterceptor {

@@ -72,9 +72,9 @@ public interface TicketRepository extends JpaRepository<Ticket, Long>, TicketRep
             SUM(CASE WHEN assigned_team = 'SUPPORT' THEN 1 ELSE 0 END) as supportTeamTickets,
             SUM(CASE WHEN assigned_team = 'DEVELOPMENT' THEN 1 ELSE 0 END) as developmentTeamTickets,
             SUM(CASE WHEN assigned_team IS NULL AND assigned_user_id IS NULL THEN 1 ELSE 0 END) as unassignedTickets,
-            SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as ticketsCreatedToday,
-            SUM(CASE WHEN status = 'RESOLVED' AND DATE(updated_at) = CURDATE() THEN 1 ELSE 0 END) as ticketsResolvedToday,
-            SUM(CASE WHEN status = 'CLOSED' AND DATE(updated_at) = CURDATE() THEN 1 ELSE 0 END) as ticketsClosedToday
+            SUM(CASE WHEN DATE(created_at) = CURRENT_DATE THEN 1 ELSE 0 END) as ticketsCreatedToday,
+            SUM(CASE WHEN status = 'RESOLVED' AND DATE(updated_at) = CURRENT_DATE THEN 1 ELSE 0 END) as ticketsResolvedToday,
+            SUM(CASE WHEN status = 'CLOSED' AND DATE(updated_at) = CURRENT_DATE THEN 1 ELSE 0 END) as ticketsClosedToday
         FROM tickets
         """, nativeQuery = true)
     TicketStatisticsProjection getTicketStatistics();

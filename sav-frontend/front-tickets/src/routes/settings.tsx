@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@store/authStore'
-import SettingsPage from '@routes/SettingsPage'
+import SettingsPage from '@pages/SettingsPage'
 
 export const Route = createFileRoute('/settings')({
   beforeLoad: () => {

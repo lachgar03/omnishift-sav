@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@store/authStore'
-import DashboardPage from '@routes/DashboardPage'
+import DashboardPage from '@pages/DashboardPage'
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: () => {

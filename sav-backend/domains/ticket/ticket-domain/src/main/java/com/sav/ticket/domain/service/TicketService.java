@@ -671,7 +671,7 @@ public class TicketService {
 
     private void checkAndEscalateTicket(Ticket ticket) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime createdAt = ticket.getCreatedAt();
+        LocalDateTime createdAt = ticket.getCreatedAt() != null ? ticket.getCreatedAt() : now;
         long hoursSinceCreation = java.time.Duration.between(createdAt, now).toHours();
 
         boolean shouldEscalate = ticketEscalationService.needsEscalation(ticket);

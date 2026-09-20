@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@store/authStore'
 import { UserRole } from '@/constants/roles'
-import AdminSettingsPage from '@routes/AdminSettingsPage'
+import AdminSettingsPage from '@pages/AdminSettingsPage'
 
 export const Route = createFileRoute('/admin/settings')({
   beforeLoad: () => {

@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@store/authStore'
 import { UserRole } from '@/constants/roles'
-import UserEditPage from '@routes/UserEditPage'
+import UserEditPage from '@pages/UserEditPage'
 
 export const Route = createFileRoute('/users/$id/edit')({
   beforeLoad: () => {

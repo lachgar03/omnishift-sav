@@ -20,6 +20,7 @@
       "@/*": ["./src/*"],
       "@api/*": ["./src/api/*"],
       "@components/*": ["./src/components/*"],
+      "@pages/*": ["./src/pages/*"],
       "@routes/*": ["./src/routes/*"],
       "@store/*": ["./src/store/*"],
       "@utils/*": ["./src/utils/*"],

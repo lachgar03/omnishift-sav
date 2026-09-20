@@ -2,89 +2,125 @@
 
 [![Java 17](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-7.1-purple.svg)](https://vitejs.dev/)
 [![Keycloak](https://img.shields.io/badge/Keycloak-23.0-red.svg)](https://www.keycloak.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
 [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-Ready-2496ED.svg)](https://www.docker.com/)
+[![CI](https://github.com/lachgar03/omnishift-sav/actions/workflows/ci.yml/badge.svg)](https://github.com/lachgar03/omnishift-sav/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**OmniShift SAV** (Service Après-Vente) is an enterprise-grade, full-stack support ticket management platform. Built to support technical operations and law firm software suites, OmniShift provides end-to-end incident management, technician workflows, real-time analytics, and role-based access control secured by OAuth2/OpenID Connect.
+**OmniShift SAV** (Service Après-Vente) is an enterprise-grade, full-stack support ticket and incident management platform. Developed independently during an engineering internship and subsequently refactored into a portfolio project, OmniShift showcases clean architecture, Domain-Driven Design (DDD) modular boundaries, robust role-based security, automated test suites, and modern frontend practices for junior/mid-level full-stack engineering roles.
 
 ---
 
 ## 📑 Table of Contents
 
+- [Project Context & Engineering Goals](#-project-context--engineering-goals)
 - [System Architecture](#-system-architecture)
 - [Monorepo Structure](#-monorepo-structure)
-- [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
+- [Implemented Features vs. Roadmap](#-implemented-features-vs-roadmap)
 - [Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
+- [Technology Stack](#-technology-stack)
 - [Prerequisites](#-prerequisites)
 - [Getting Started](#-getting-started)
   - [1. Infrastructure Services (Docker Compose)](#1-infrastructure-services-docker-compose)
-  - [2. Keycloak Setup](#2-keycloak-setup)
+  - [2. Keycloak IAM Setup](#2-keycloak-iam-setup)
   - [3. Backend Setup](#3-backend-setup)
   - [4. Frontend Setup](#4-frontend-setup)
 - [Ports & Services Reference](#-ports--services-reference)
 - [API Overview & Authentication Flow](#-api-overview--authentication-flow)
-- [Code Quality & Development](#-code-quality--development)
-- [Roadmap](#-roadmap)
+- [Testing & Quality Assurance](#-testing--quality-assurance)
+- [Engineering Tradeoffs & Limitations](#-engineering-tradeoffs--limitations)
 - [License](#-license)
+
+---
+
+## 🎯 Project Context & Engineering Goals
+
+OmniShift SAV was initially conceived and engineered to streamline after-sales support operations, ticket triage, and communication between end-users, support technicians, and administrators. 
+
+### Key Architectural Refactoring Highlights:
+1. **Modular Monolith with Domain-Driven Design (DDD)**: Clear bounded contexts (`ticket`, `user`) separated into strict layered modules (`api`, `domain`, `infrastructure`) preventing cross-boundary leakage.
+2. **Robust Spring Boot Backend**:
+   - Resolved SQL dialect portability issues (PostgreSQL standard queries replacing vendor-specific functions).
+   - Lombok safety: Eliminated circular recursion and `StackOverflowError` risks on bidirectional JPA entities.
+   - Clean profile isolation: Debug endpoints restricted to `dev`/`test` environments; credentials externalized via environment variables.
+   - Standardized Flyway schema migrations (`V1__Initial_schema.sql`).
+3. **Modern React 19 Frontend**:
+   - Strict separation of routing definitions (`src/routes/`) from page views (`src/pages/`) and components (`src/components/`), resolving TanStack Router file-scanner conflicts.
+   - Deduplication of ticket management interfaces, unifying user ticket queues and general queues into configurable components.
+   - Centralized Axios client architecture with automatic Keycloak token attachment and error interception.
+4. **Comprehensive Test Automation & CI**:
+   - Full suite of unit, domain logic, and MockMvc integration tests.
+   - GitHub Actions CI pipeline validating both backend Maven reactor build/tests and frontend ESLint/TypeScript/Vite builds on every push and pull request.
 
 ---
 
 ## 🏗️ System Architecture
 
-OmniShift SAV is built as a **decoupled monorepo** featuring:
-- **Frontend SPA**: React 18 with TanStack Router, TanStack Query, and Mantine UI.
-- **API Gateway**: Spring Cloud Gateway routing incoming requests, handling CORS, and proxying.
-- **Backend**: Spring Boot 3.2.5 Modular Monolith implementing **Domain-Driven Design (DDD)** principles.
-- **Identity & Access Management (IAM)**: Keycloak 23 providing OAuth2/OIDC token issuance and centralized user directory.
-- **Persistence & Caching**: PostgreSQL 15 with Flyway migrations and Redis 7.
+OmniShift SAV uses a **decoupled monorepo** architecture:
+- **Client Layer**: React 19 SPA powered by Vite, Mantine UI component library, TanStack Router, and TanStack Query.
+- **Identity & Access Management (IAM)**: Keycloak 23 providing OAuth2/OIDC token issuance, role management, and SSO.
+- **API Gateway**: Spring Cloud Gateway routing client requests, handling CORS abstraction, and proxying to backend services.
+- **Backend Application**: Spring Boot 3.2.5 Modular Monolith implementing DDD principles, Spring Security OAuth2 Resource Server, and Flyway database migrations.
+- **Persistence & Caching**: PostgreSQL 15 relational database with Redis 7 caching and session support.
 
 ```mermaid
 flowchart TD
-    subgraph ClientLayer ["Client Layer"]
-        SPA["React 18 SPA (Vite + Mantine UI + TanStack)\nPort: 3000"]
+    subgraph ClientLayer ["Client Layer (Browser)"]
+        SPA["React 19 SPA (Vite + Mantine + TanStack)\nPort: 3000"]
     end
 
     subgraph AuthLayer ["Identity & Access Management"]
         KC["Keycloak 23 (OAuth2 / OIDC)\nPort: 8180 (Realm: sav-realm)"]
     end
 
-    subgraph GatewayLayer ["Routing & Gateway"]
+    subgraph GatewayLayer ["Routing & Gateway Layer"]
         GW["Spring Cloud Gateway\nPort: 8081 (/api)"]
     end
 
     subgraph BackendMonolith ["Spring Boot Modular Monolith (Port: 8090)"]
         direction TB
-        SEC["Platform: Security (JWT / RBAC filter)"]
+        SEC["Platform: Security (JWT / RBAC Filter)"]
         
         subgraph Domains ["Bounded Contexts (DDD)"]
-            TICKET_DOM["Ticket Domain\n(API, Domain, Infrastructure)"]
-            USER_DOM["User Domain\n(API, Domain, Infrastructure)"]
+            subgraph TicketDomain ["Ticket Domain"]
+                T_API["ticket-api (Controllers, DTOs)"]
+                T_DOM["ticket-domain (Entities, Services, Events)"]
+                T_INF["ticket-infrastructure (Spring Data JPA)"]
+                T_API --> T_DOM
+                T_INF --> T_DOM
+            end
+            
+            subgraph UserDomain ["User Domain"]
+                U_API["user-api (Controllers, DTOs)"]
+                U_DOM["user-domain (Entities, Services, Keycloak Sync)"]
+                U_INF["user-infrastructure (Spring Data JPA)"]
+                U_API --> U_DOM
+                U_INF --> U_DOM
+            end
         end
         
-        INFRA["Infrastructure & Shared Kernel"]
-        APP["Application Entrypoint (Flyway Migrations)"]
+        SHARED["Shared Kernel & Infrastructure"]
+        APP["Application Runner & Flyway Migrations"]
     end
 
-    subgraph DataServices ["Data & Infrastructure Services"]
+    subgraph DataServices ["Persistence & Infrastructure"]
         PG[("PostgreSQL 15\nPort: 5432")]
-        REDIS[("Redis 7 (Cache / Session)\nPort: 6379")]
+        REDIS[("Redis 7\nPort: 6379")]
         MAIL["Mailhog (SMTP: 1025, Web: 8025)"]
         PGADMIN["pgAdmin 4\nPort: 8082"]
     end
 
-    SPA -->|1. Authenticate / Get JWT| KC
-    SPA -->|2. API Requests + Bearer Token| GW
+    SPA -->|1. Authenticate & Obtain JWT| KC
+    SPA -->|2. HTTP Requests + Bearer Token| GW
     GW -->|Forward API Traffic| SEC
-    SEC --> TICKET_DOM
-    SEC --> USER_DOM
-    TICKET_DOM --> PG
-    USER_DOM --> PG
+    SEC --> T_API
+    SEC --> U_API
+    T_INF --> PG
+    U_INF --> PG
     APP --> PG
     BackendMonolith -.-> REDIS
     BackendMonolith -.-> MAIL
@@ -97,110 +133,80 @@ flowchart TD
 
 ```text
 omnishift-sav/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                     # GitHub Actions CI (Backend Maven + Frontend npm)
+├── docker-compose.yml                 # Root container orchestration (Postgres, Keycloak, Redis, etc.)
 ├── sav-backend/                       # Spring Boot 3 Modular Monolith
-│   ├── application/                   # Main application runner & Flyway migrations
-│   │   └── src/main/resources/db/migration/ # Flyway SQL migrations
-│   ├── domains/                       # Bounded contexts (DDD)
-│   │   ├── ticket/                    # Ticket domain
-│   │   │   ├── ticket-api/            # REST controllers, DTOs & request mapping
-│   │   │   ├── ticket-domain/         # Domain models, aggregates, business rules
-│   │   │   └── ticket-infrastructure/ # Spring Data JPA repositories & entities
-│   │   └── user/                      # User domain
-│   │       ├── user-api/              # User controllers & endpoints
-│   │       ├── user-domain/           # User aggregates & services
-│   │       └── user-infrastructure/   # User persistence & Keycloak sync
-│   ├── infrastructure/                # Cross-cutting infrastructure
-│   │   ├── parent/                    # Maven parent POM with dependency management
-│   │   └── shared/                    # Shared kernel, exceptions, utilities
-│   ├── platform/                      # Platform modules
+│   ├── application/                   # Main application entry point, configs & Flyway migrations
+│   │   ├── src/main/java/com/sav/app/ # Spring Boot runner, GlobalExceptionHandler, RateLimiting
+│   │   ├── src/main/resources/db/     # Flyway SQL migrations (V1__Initial_schema.sql)
+│   │   └── src/test/java/com/sav/app/ # MockMvc integration & exception handler tests
+│   ├── domains/                       # Bounded Contexts
+│   │   ├── ticket/                    # Ticket Bounded Context
+│   │   │   ├── ticket-api/            # REST controllers, request/response DTOs
+│   │   │   ├── ticket-domain/         # Domain entities, aggregates, business services & unit tests
+│   │   │   └── ticket-infrastructure/ # Spring Data JPA repositories & database adapters
+│   │   └── user/                      # User Bounded Context
+│   │       ├── user-api/              # User controllers & profile endpoints
+│   │       ├── user-domain/           # User entities, services, Keycloak JIT sync & unit tests
+│   │       └── user-infrastructure/   # User persistence & repository implementations
+│   ├── infrastructure/                # Cross-Cutting Infrastructure
+│   │   ├── parent/                    # Parent POM with shared dependency management
+│   │   └── shared/                    # Shared enums, domain events, exceptions, utility classes
+│   ├── platform/                      # Platform Modules
 │   │   ├── gateway/                   # Spring Cloud Gateway (Port 8081)
-│   │   └── security/                  # OAuth2 JWT resource server & RBAC filters
-│   ├── init-scripts/                  # Database initialization scripts
-│   ├── docker-compose.yml             # Docker services (Postgres, Keycloak, Redis, etc.)
-│   ├── env.example                    # Backend environment template
-│   ├── pom.xml                        # Root Maven reactor build
-│   └── README.md                      # Backend specific documentation
+│   │   └── security/                  # OAuth2 JWT resource server config & SecurityUtil
+│   ├── init-scripts/                  # PostgreSQL initialization scripts
+│   ├── pom.xml                        # Root Maven reactor build definition
+│   └── README.md                      # Backend-specific documentation
 │
 ├── sav-frontend/
-│   └── front-tickets/                 # React 18 TypeScript Single Page Application
-│       ├── public/                    # Static assets & silent SSO callback
+│   └── front-tickets/                 # React 19 TypeScript Single Page Application
+│       ├── public/                    # Static assets
 │       ├── src/
-│       │   ├── api/                   # Axios client, auth config, queryClient
-│       │   ├── components/            # Reusable UI components & dialogs
-│       │   │   ├── admin/             # Admin dashboards & user management
-│       │   │   ├── shared/            # Navigation, headers, layout elements
-│       │   │   ├── ui/                # Base form controls & buttons
-│       │   │   ├── users/             # Technician & user directory views
-│       │   │   └── workflow/          # Ticket queues (Assigned, Critical, etc.)
-│       │   ├── constants/             # Enums, roles, storage keys, API routes
-│       │   ├── contexts/              # Authentication context providers
-│       │   ├── hooks/                 # TanStack Query custom hooks
-│       │   ├── layout/                # Private & Public layouts
-│       │   ├── routes/                # TanStack Router route definitions
-│       │   ├── services/              # API services (ticketService, userService)
+│       │   ├── api/                   # Unified Axios client & TanStack query client
+│       │   ├── components/            # Reusable UI components & ProtectedRoute
+│       │   ├── pages/                 # Full-page view components (Tickets, Details, Admin, etc.)
+│       │   ├── routes/                # TanStack Router type-safe route definitions
+│       │   ├── services/              # API domain services (ticketService, userService)
 │       │   ├── store/                 # Zustand state stores (authStore, uiStore)
-│       │   └── types/                 # TypeScript interfaces & API contracts
-│       ├── package.json               # Frontend dependencies and scripts
-│       ├── vite.config.ts             # Vite configuration
-│       └── README.md                  # Frontend specific documentation
-└── Readme.md                          # Root repository documentation (this file)
+│       │   ├── types/                 # TypeScript interfaces & API contracts
+│       │   └── main.tsx               # Application bootstrap
+│       ├── package.json               # Frontend dependencies & scripts
+│       ├── tsconfig.json              # TypeScript configuration with path aliases (@pages, etc.)
+│       └── vite.config.ts             # Vite build & plugin configuration
+└── README.md                          # Repository documentation (this file)
 ```
 
 ---
 
-## ✨ Key Features
+## ⚡ Implemented Features vs. Roadmap
 
-- **Multi-Role Incident Management**: Complete ticket lifecycle management (Create, Assign, Prioritize, In-Progress, Resolve, Close, Reopen).
-- **Technician & Workflow Queues**: Specialized views for unassigned tickets, team-assigned tickets, high-priority, and critical-priority issues.
-- **Interactive Discussion & Attachments**: Integrated messaging threads per ticket with file attachment capabilities.
-- **Automated User Synchronization**: Seamless Just-In-Time (JIT) user profile provisioning in PostgreSQL upon first Keycloak JWT login.
-- **Admin Dashboard & System Analytics**: Real-time KPI cards, ticket resolution velocity, user management, and team allocation.
-- **Centralized Gateway & Security**: All frontend requests route via Spring Cloud Gateway (`:8081`) with JWT verification, CORS abstraction, and unified routing.
-- **Pre-seeded Development Data**: Built-in Flyway migrations and development profiles providing ready-to-test users, tickets, and roles.
+To maintain clear and honest engineering standards, the table below distinguishes features fully implemented and verified in the codebase from prospective roadmap items:
 
----
-
-## 💻 Technology Stack
-
-### Backend
-| Technology | Version | Description |
-|---|---|---|
-| **Java** | 17 | Core programming language |
-| **Spring Boot** | 3.2.5 | Application framework |
-| **Spring Cloud Gateway**| 2023.0.x | Reactive API gateway |
-| **Spring Security** | 6.x | OAuth2 Resource Server & JWT validation |
-| **Spring Data JPA** | 3.x | ORM & database persistence |
-| **Flyway** | Latest | Database schema versioning & migrations |
-| **Maven** | 3.9+ | Multi-module build management |
-
-### Frontend
-| Technology | Version | Description |
-|---|---|---|
-| **React** | 18 | Declarative UI library |
-| **TypeScript** | 5.9 | Type-safe JavaScript |
-| **Vite** | 7.1 | Ultra-fast frontend bundler and dev server |
-| **TanStack Router** | 1.131 | Type-safe routing with built-in route protection |
-| **TanStack Query** | 5.85 | Server-state management, caching, and mutations |
-| **Mantine UI** | 8.2 | Modern accessible UI component system |
-| **Zustand** | 5.0 | Client-side reactive state management |
-| **Keycloak-js** | 26.2 | Official OpenID Connect client adapter |
-| **Axios** | 1.11 | HTTP client with bearer token interceptors |
-
-### Infrastructure & DevOps
-| Technology | Version | Description |
-|---|---|---|
-| **Docker & Docker Compose** | Latest | Containerized local environment |
-| **PostgreSQL** | 15 Alpine | Primary relational database |
-| **Keycloak** | 23.0 | Identity provider and SSO |
-| **Redis** | 7 Alpine | In-memory cache & session store |
-| **PgAdmin 4** | Latest | Web GUI for PostgreSQL |
-| **Mailhog** | Latest | Local SMTP email server and web tester |
+| Feature / Capability | Status | Description |
+|---|:---:|---|
+| **Ticket Lifecycle Management** | ✅ Implemented | Complete state machine: `OPEN` → `ASSIGNED` → `IN_PROGRESS` → `RESOLVED` → `CLOSED` / `REOPENED`. |
+| **Role-Based Access Control (RBAC)** | ✅ Implemented | Method-level security and UI guards for `USER`, `TECHNICIAN`, and `ADMIN`. |
+| **Ticket Discussion & Attachments** | ✅ Implemented | Multi-user conversation threads per ticket with file attachment support. |
+| **Technician Workflow Queues** | ✅ Implemented | Pre-filtered views for unassigned, critical, and team-assigned tickets. |
+| **Automated Keycloak JIT Sync** | ✅ Implemented | Just-In-Time synchronization of user profile and roles into PostgreSQL upon first JWT authentication. |
+| **Rate Limiting Protection** | ✅ Implemented | In-memory token bucket interceptor guarding sensitive endpoints against abuse. |
+| **Database Migrations** | ✅ Implemented | Versioned Flyway migrations ensuring repeatable schema deployments. |
+| **Centralized API Gateway** | ✅ Implemented | Spring Cloud Gateway routing requests on `:8081` to backend services. |
+| **Admin KPIs & Statistics** | ✅ Implemented | Native aggregate queries computing system-wide ticket resolution metrics and workload counts. |
+| **Automated Test Suite & CI** | ✅ Implemented | 31 automated backend tests (MockMvc + JUnit 5/Mockito) and GitHub Actions pipeline. |
+| **Real-time Push Notifications** | 📋 Roadmap | WebSocket / Server-Sent Events (SSE) for instant ticket update toasts. |
+| **Automated SLA Escalation Engine** | 📋 Roadmap | Background Quartz/Spring scheduler triggering SLA escalation events. |
+| **Distributed Caching (Redis)** | 📋 Roadmap | Expanding Redis from session storage to distributed query result caching. |
+| **Full-Text Search Engine** | 📋 Roadmap | Elasticsearch / OpenSearch integration for deep ticket search. |
 
 ---
 
 ## 🔐 Role-Based Access Control (RBAC)
 
-The system enforces granular role-based authorization:
+The platform enforces strict role boundaries:
 
 | Capability | USER | TECHNICIAN | ADMIN |
 |---|:---:|:---:|:---:|
@@ -210,19 +216,42 @@ The system enforces granular role-based authorization:
 | View all tickets across the system | ❌ | ✅ | ✅ |
 | Update ticket status, priority & resolution | ❌ | ✅ | ✅ |
 | Access technician workflow queues | ❌ | ✅ | ✅ |
-| View technician directory & lists | ❌ | ✅ | ✅ |
-| Assign tickets to users & teams | ❌ | ❌ | ✅ |
-| Create and manage system users | ❌ | ❌ | ✅ |
-| Modify user roles & account statuses | ❌ | ❌ | ✅ |
+| Assign tickets to self or other technicians | ❌ | ❌ | ✅ |
+| Create and manage user profiles & roles | ❌ | ❌ | ✅ |
 | Access system administration & metrics | ❌ | ❌ | ✅ |
+
+---
+
+## 💻 Technology Stack
+
+### Backend
+- **Language**: Java 17
+- **Framework**: Spring Boot 3.2.5
+- **Security**: Spring Security 6.x (OAuth2 Resource Server, JWT validation)
+- **API Gateway**: Spring Cloud Gateway (2023.0.x)
+- **Persistence**: Spring Data JPA / Hibernate, Flyway Migrations
+- **Database**: PostgreSQL 15
+- **Caching**: Redis 7
+- **Build Tool**: Apache Maven 3.9+ (Multi-module reactor)
+
+### Frontend
+- **Language**: TypeScript 5.9
+- **UI Library**: React 19
+- **Bundler & Dev Server**: Vite 7.1
+- **Routing**: TanStack Router 1.131 (type-safe code-based routing)
+- **Data Fetching**: TanStack Query 5.85 (React Query)
+- **Component Library**: Mantine UI 8.2 & Tabler Icons
+- **State Management**: Zustand 5.0
+- **HTTP Client**: Axios 1.11 with Keycloak interceptor
+- **Code Quality**: ESLint 9 (Flat Config), Prettier 3
 
 ---
 
 ## ⚙️ Prerequisites
 
-Before running the project locally, ensure you have the following installed:
+Ensure the following tools are installed on your workstation:
 - **Java Development Kit (JDK) 17+**
-- **Node.js 18+** & **Yarn** (`corepack enable` or `npm install -g yarn`)
+- **Node.js 18+** & **npm** (or yarn)
 - **Docker** & **Docker Compose**
 - **Git**
 
@@ -234,36 +263,34 @@ Follow these steps to spin up the entire OmniShift SAV ecosystem locally:
 
 ### 1. Infrastructure Services (Docker Compose)
 
-Navigate to the `sav-backend` directory and start the supporting containers:
+From the project root, start all backing infrastructure containers:
 
 ```bash
-cd sav-backend
 docker compose up -d
 ```
 
-Verify that all services are healthy:
+Verify that all containers are healthy:
 - **PostgreSQL**: `localhost:5432`
 - **Keycloak**: `localhost:8180`
 - **Redis**: `localhost:6379`
-- **pgAdmin**: `localhost:8082`
-- **Mailhog**: `localhost:8025`
+- **Mailhog**: `localhost:8025` (Web UI) / `localhost:1025` (SMTP)
+- **pgAdmin 4**: `localhost:8082`
 
-### 2. Keycloak Setup
+### 2. Keycloak IAM Setup
 
-1. Open Keycloak Admin Console: **[http://localhost:8180/admin](http://localhost:8180/admin)**
-2. Sign in with default admin credentials:
-   - **Username**: `admin`
-   - **Password**: `admin123`
+1. Open the Keycloak Admin Console: **[http://localhost:8180/admin](http://localhost:8180/admin)**
+2. Log in with admin credentials (`admin` / `admin123`).
 3. Create a Realm named **`sav-realm`**.
 4. Create Clients:
    - **`sav-backend`**:
      - Client authentication: **ON** (Confidential)
      - Valid redirect URIs: `http://localhost:8090/*`, `http://localhost:8081/*`
+     - Save and retrieve the Client Secret under the *Credentials* tab.
    - **`sav-frontend`**:
      - Client authentication: **OFF** (Public)
      - Valid redirect URIs: `http://localhost:3000/*`
      - Web origins: `http://localhost:3000`, `+`
-5. Configure Realm Roles:
+5. Create Realm Roles:
    - `ADMIN`
    - `TECHNICIAN`
    - `USER`
@@ -277,81 +304,74 @@ Verify that all services are healthy:
 
 From the `sav-backend` directory:
 
-1. Configure environment variables (optional for `dev` profile):
+1. Configure environment variables (optional for local development, fallbacks are provided for the `dev` profile):
    ```bash
    cp env.example .env
    ```
-
-2. Build the multi-module Maven project:
+2. Build and run tests across all modules:
    ```bash
-   ./mvnw clean install -DskipTests
+   mvn clean test
    ```
-
-3. Launch the application with the `dev` profile (enables pre-seeded demo data & Flyway migrations):
+3. Start the Spring Boot application using the `dev` profile:
    ```bash
-   ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+   mvn spring-boot:run -pl application -Dspring-boot.run.profiles=dev
    ```
 
 The backend starts on port **8090**, and the Gateway routes traffic on port **8081**.
 
 ### 4. Frontend Setup
 
-In a new terminal, navigate to the frontend directory:
-
-```bash
-cd sav-frontend/front-tickets
-```
+From the `sav-frontend/front-tickets` directory:
 
 1. Install dependencies:
    ```bash
-   yarn install
+   npm install
    ```
-
-2. Configure environment file:
-   Create `.env.local`:
+2. Create `.env.local`:
    ```env
    VITE_API_URL=http://localhost:8081
    VITE_KEYCLOAK_URL=http://localhost:8180
    VITE_KEYCLOAK_REALM=sav-realm
    VITE_KEYCLOAK_CLIENT_ID=sav-frontend
    ```
-
 3. Start the Vite development server:
    ```bash
-   yarn dev
+   npm run dev
    ```
-
 4. Access the web application at **[http://localhost:3000](http://localhost:3000)**.
 
 ---
 
 ## 🌐 Ports & Services Reference
 
-| Service | Port | URL | Default Credentials |
+| Service | Port | URL | Default Dev Credentials |
 |---|---|---|---|
-| **Frontend Application** | `3000` | [http://localhost:3000](http://localhost:3000) | Log in via Keycloak users |
+| **Frontend Application** | `3000` | [http://localhost:3000](http://localhost:3000) | Authenticate via Keycloak users |
 | **API Gateway** | `8081` | [http://localhost:8081/api](http://localhost:8081/api) | Bearer JWT required |
-| **Backend API Direct** | `8090` | [http://localhost:8090/api](http://localhost:8090/api) | Bearer JWT required |
+| **Backend API (Direct)** | `8090` | [http://localhost:8090/api](http://localhost:8090/api) | Bearer JWT required |
 | **Swagger UI** | `8090` | [http://localhost:8090/swagger-ui.html](http://localhost:8090/swagger-ui.html) | Public |
-| **Spring Actuator Health**| `8090` | [http://localhost:8090/actuator/health](http://localhost:8090/actuator/health) | Public |
+| **Actuator Health** | `8090` | [http://localhost:8090/actuator/health](http://localhost:8090/actuator/health) | Public |
 | **Keycloak Admin Console**| `8180` | [http://localhost:8180/admin](http://localhost:8180/admin) | `admin` / `admin123` |
 | **PostgreSQL Database** | `5432` | `localhost:5432` | `admin` / `admin123` (db: `postgres`) |
 | **pgAdmin 4** | `8082` | [http://localhost:8082](http://localhost:8082) | `admin@sav.com` / `admin123` |
 | **Redis Cache** | `6379` | `localhost:6379` | No auth (default local) |
 | **Mailhog Web UI** | `8025` | [http://localhost:8025](http://localhost:8025) | Public |
 
+> [!WARNING]
+> The credentials listed above are default values intended strictly for local development. For staging or production environments, always override them using secure environment variables (`DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`, `KEYCLOAK_CLIENT_SECRET`).
+
 ---
 
 ## 📡 API Overview & Authentication Flow
 
 ### Authentication Flow
-1. User logs into Keycloak from the React application (`:3000`).
-2. Keycloak issues a JWT bearer token containing user profile and realm/resource roles.
-3. The React app injects the token in the `Authorization: Bearer <token>` header for all API requests directed at the Gateway (`:8081`).
-4. Gateway proxies requests to Backend (`:8090`), where Spring Security validates the signature and extracts role claims.
-5. On the first authenticated call, the User Domain automatically creates or synchronizes the user profile in PostgreSQL.
+1. The user navigates to `http://localhost:3000` and is redirected to Keycloak for authentication.
+2. Upon successful login, Keycloak redirects back to the SPA with authorization codes exchanged for JWT access and refresh tokens.
+3. The React app injects the JWT into the `Authorization: Bearer <token>` header on all requests to the Gateway (`:8081`).
+4. The Gateway validates and forwards traffic to the backend modular monolith (`:8090`).
+5. On the first authenticated request, `UserSyncService` inspects the JWT claims (`sub`, `preferred_username`, `email`, realm roles) and automatically provisions or updates the user profile in PostgreSQL.
 
-### Core API Endpoints
+### Core Endpoints
 
 | Method | Endpoint | Description | Role Required |
 |---|---|---|---|
@@ -360,71 +380,56 @@ cd sav-frontend/front-tickets
 | `PUT` | `/api/users/me` | Update authenticated user profile | Any authenticated |
 | `GET` | `/api/users` | List all users in system | `ADMIN` |
 | `POST` | `/api/tickets` | Create a new ticket | `USER`, `TECHNICIAN`, `ADMIN` |
-| `GET` | `/api/tickets` | List all tickets | `TECHNICIAN`, `ADMIN` |
+| `GET` | `/api/tickets` | List all tickets with pagination | `TECHNICIAN`, `ADMIN` |
 | `GET` | `/api/tickets/my-tickets`| List current user's tickets | `USER`, `TECHNICIAN`, `ADMIN` |
-| `GET` | `/api/tickets/{id}` | Get ticket details & messages | Authorized user |
+| `GET` | `/api/tickets/{id}` | Get ticket details, messages & attachments | Authorized user |
 | `PUT` | `/api/tickets/{id}` | Update ticket details/status | `TECHNICIAN`, `ADMIN` |
 | `POST` | `/api/tickets/{id}/assign`| Assign ticket to user or team | `ADMIN` |
-
-### Quick cURL Smoke Test
-
-```bash
-# 1. Fetch access token from Keycloak
-TOKEN=$(curl -s -X POST http://localhost:8180/realms/sav-realm/protocol/openid-connect/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin&password=admin123&grant_type=password&client_id=sav-backend&client_secret=<YOUR_CLIENT_SECRET>" \
-  | jq -r '.access_token')
-
-# 2. Query user profile via Gateway
-curl -X GET http://localhost:8081/api/users/me \
-  -H "Authorization: Bearer $TOKEN"
-
-# 3. Create a ticket
-curl -X POST http://localhost:8081/api/tickets \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "System Connectivity Alert",
-    "description": "Unable to connect to document indexing service.",
-    "type": "BUG",
-    "priority": "HIGH"
-  }'
-```
+| `POST` | `/api/tickets/{id}/close` | Close a resolved or active ticket | Ticket creator or `ADMIN` |
+| `POST` | `/api/tickets/{id}/reopen`| Reopen a closed ticket | `TECHNICIAN`, `ADMIN` |
 
 ---
 
-## 🛠️ Code Quality & Development
+## 🧪 Testing & Quality Assurance
 
-### Frontend Commands
+### Backend Automated Tests
+The backend test suite covers domain business rules, role access constraints, Keycloak user sync, MockMvc controller contracts, and global exception handling:
+
+```bash
+cd sav-backend
+mvn clean test
+```
+
+- **`TicketServiceTest`**: Validates ticket creation, input validation, state transitions, auto-assignment, and modification permissions.
+- **`TicketSecurityServiceTest`**: Tests RBAC boundaries for ticket access and modification.
+- **`UserServiceTest`**: Verifies user profile updates, role changes, and user statistics.
+- **`UserSyncServiceTest`**: Validates JIT user provisioning from Keycloak JWT tokens.
+- **`TicketControllerIntegrationTest`**: MockMvc integration test validating HTTP contracts, validation error responses, and role authorization.
+- **`GlobalExceptionHandlerTest`**: Tests structured JSON error responses (`ErrorResponse`, `ValidationErrorResponse`).
+
+### Frontend Quality Checks
+The frontend codebase is validated with strict TypeScript compilation, ESLint rules, and production bundle builds:
+
 ```bash
 cd sav-frontend/front-tickets
 
-yarn dev          # Start Vite dev server with HMR
-yarn build        # Compile TypeScript and bundle production build
-yarn lint         # Run ESLint checks
-yarn lint:fix     # Automatically fix ESLint errors
-yarn format       # Format codebase using Prettier
-yarn type-check   # Validate TypeScript types without emitting
+npm run type-check   # Validate TypeScript types without emitting
+npm run lint         # Execute ESLint checks
+npm run build        # Compile production bundle
 ```
 
-### Backend Commands
-```bash
-cd sav-backend
-
-./mvnw clean compile           # Compile all modules
-./mvnw clean test              # Execute unit and integration tests
-./mvnw clean package           # Package JARs
-```
+### Continuous Integration (CI)
+A unified GitHub Actions workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) executes on every push and pull request:
+1. **Backend Job**: Sets up JDK 17, caches Maven dependencies, and executes `mvn clean test`.
+2. **Frontend Job**: Sets up Node.js 18, installs dependencies, and runs `npm run type-check`, `npm run lint`, and `npm run build`.
 
 ---
 
-## 🗺️ Roadmap
+## ⚖️ Engineering Tradeoffs & Limitations
 
-- [ ] **Real-time Push Notifications**: WebSocket / SSE integration for live ticket updates and technician assignment alerts.
-- [ ] **SLA Management**: Automated SLA escalation timers and email alerts for critical tickets.
-- [ ] **Elasticsearch / OpenSearch**: Full-text search across historical tickets and attachments.
-- [ ] **Multi-tenancy**: Isolated tenant boundaries for multiple firm branches.
-- [ ] **Mobile App**: Dedicated React Native support portal.
+1. **In-Memory vs. Distributed Rate Limiting**: The current rate limiting uses an in-memory token bucket interceptor. While lightweight and effective for single-instance deployments, a horizontally scaled multi-instance deployment would require a distributed Redis-backed rate limiter.
+2. **Single Database Schema for Modular Monolith**: Bounded contexts (`ticket`, `user`) are separated logically into distinct Maven modules and JPA entities, but share a single PostgreSQL database schema. This simplifies joins and transactions for an MVP/internship project while laying the foundation for schema separation or microservices if scale demands it.
+3. **Keycloak Token Refresh in Frontend**: The frontend handles initial authentication and token attachment via Axios interceptors. Silent token refresh is supported via Keycloak adapter configurations, but active session monitoring can be further enhanced with proactive refresh timers.
 
 ---
 

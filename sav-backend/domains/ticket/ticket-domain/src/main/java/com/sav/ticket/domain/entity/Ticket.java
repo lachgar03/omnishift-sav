@@ -7,8 +7,11 @@ import com.sav.common.enums.Team;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,7 +21,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "tickets")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"messages", "attachments"})
+@EqualsAndHashCode(of = "id")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
